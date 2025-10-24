@@ -533,7 +533,7 @@
 
                 // 2. Preparar datos para Firestore y Cloud Function
                 const companySettings = { defaultInterest, currency, requireGps };
-                const companyPlan = { duration: planDuration, text: planDurationText, value: planValue, startDate: serverTimestamp() }; // Añadimos fecha y texto
+                const companyPlan = { duration: planDuration, text: planDurationText, value: planValue }; // startDate se añadirá en el servidor
                 
                 const companyBaseData = {
                     name: companyName,
@@ -724,3 +724,4 @@
     </script>
 </body>
 </html>
+
