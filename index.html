@@ -256,7 +256,7 @@
     <script type="module">
         // Importa Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, getIdTokenResult } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js"; // Añadido getIdTokenResult
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, getIdToken } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js"; // Añadido getIdToken
         import { getFirestore, collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-functions.js";
 
@@ -272,7 +272,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
-        const functions = getFunctions(app, 'us-central1'); // Especifica la región
+        let functions; // Inicialización retrasada
 
         // --- Variables Globales ---
         let allCompanies = [];
@@ -567,29 +567,31 @@
                             if (!auth.currentUser) {
                                 console.error("ERROR: auth.currentUser es null ANTES de llamar la función. Refrescando...");
                                 showToast("Erro de autenticação. Por favor, tente novamente.", true);
-                                // Forzar un refresh puede ayudar a restablecer el estado de auth
-                                // O podrías intentar desloguear y mostrar el login: signOut(auth);
                                 window.location.reload(); 
                                 return; // Detiene la ejecución
                             }
                             console.log("VERIFICACIÓN: auth.currentUser OK ANTES de llamar:", auth.currentUser.uid);
                             // --- FIN VERIFICACIÓN ---
                             
-                            // Forzar obtención/refresco del token
-                            console.log("Forzando refresco del token...");
-                            await auth.currentUser.getIdToken(true); // true fuerza el refresco
-                            console.log("Token refrescado (o ya era válido).");
+                            // Forzar obtención/refresco del token ID
+                            console.log("Forzando obtención/refresco del token ID...");
+                            const idToken = await auth.currentUser.getIdToken(true); // true fuerza el refresco
+                            console.log("Token ID obtenido/refrescado."); // No mostramos el token por seguridad
 
 
                             console.log("Chamando Cloud Function 'createCompanyAndAdmin'...");
+                            // Asegúrate que 'functions' esté inicializado correctamente antes de esta llamada
+                            if (!functions) {
+                                throw new Error("Firebase Functions SDK no inicializado.");
+                            }
                             const createCompanyFunction = httpsCallable(functions, 'createCompanyAndAdmin');
                             
-                            // Crea un objeto NUEVO y LIMPIO para enviar, copiando solo lo necesario
+                            // Crea un objeto NUEVO y LIMPIO para enviar
                             const dataToSend = {
                                 companyData: {
                                     name: companyBaseData.name,
-                                    settings: { ...companyBaseData.settings }, // Copia superficial de settings
-                                    plan: { ...companyBaseData.plan }          // Copia superficial de plan
+                                    settings: { ...companyBaseData.settings }, 
+                                    plan: { ...companyBaseData.plan }          
                                 },
                                 adminEmail: adminEmail,
                                 adminPassword: adminPassword
@@ -617,8 +619,10 @@
                             // Intenta mostrar un mensaje de error más específico si está disponible
                             let detailedErrorMessage = 'Falha ao criar a empresa. Verifique os logs da Cloud Function.';
                             if (functionError.code && functionError.message) {
-                                detailedErrorMessage = `Erro (${functionError.code}): ${functionError.message}`;
-                                console.log("Detalles del Error:", functionError.details); // Log adicional
+                                // Muestra detalles adicionales si existen
+                                const details = functionError.details ? ` Detalhes: ${JSON.stringify(functionError.details)}` : '';
+                                detailedErrorMessage = `Erro (${functionError.code}): ${functionError.message}${details}`;
+                                console.log("Detalles completos del Error:", functionError); // Log completo del error
                             } else if (functionError.message) {
                                 detailedErrorMessage = functionError.message;
                             }
@@ -693,24 +697,24 @@
         // --- Inicialización ---
         function initSuperAdmin() {
             onAuthStateChanged(auth, (user) => {
-                // Aquí podríamos añadir la verificación de Custom Claims si ya la tuviéramos
                 if (user) {
-                    // **VERIFICACIÓN SUPER ADMIN (IMPORTANTE)**
-                    // Necesitamos asegurarnos de que solo TU cuenta pueda usar esta app.
-                    // Comparamos el UID logueado con tu UID de Super Admin.
                     const SUPER_ADMIN_UID = "4o3DgFdtLdfOdIqltUH90Sk3Rsi1"; // TU UID
                     if (user.uid === SUPER_ADMIN_UID) {
+                        // --- Inicializa Functions SDK AQUÍ ---
+                        if (!functions) { // Evita reinicializar
+                            console.log("Usuario Super Admin autenticado, inicializando Functions SDK...");
+                            functions = getFunctions(app, 'us-central1'); 
+                        }
+                        // --- Fin Inicialización ---
                         showSuperAdminApp(user);
-                        // setupSuperAdminEventListeners(); // <- Llamada movida a showSuperAdminApp
                     } else {
-                        // Si es otro usuario logueado (quizás un Admin normal), lo deslogueamos
                         console.warn("Intento de acceso de usuario no Super Admin:", user.uid);
-                        signOut(auth); // Desloguea al usuario no autorizado
-                        showLoginView(); // Muestra el login
+                        signOut(auth); 
+                        showLoginView(); 
                         showToast("Acceso denegado. Solo el Super Admin puede entrar.", true);
                     }
                 } else {
-                    showLoginView(); // Muestra el login si no hay nadie logueado
+                    showLoginView(); 
                 }
             });
         }
