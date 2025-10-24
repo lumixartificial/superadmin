@@ -256,7 +256,7 @@
     <script type="module">
         // Importa Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, getIdTokenResult } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js"; // Añadido getIdTokenResult
         import { getFirestore, collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-functions.js";
 
@@ -574,6 +574,12 @@
                             }
                             console.log("VERIFICACIÓN: auth.currentUser OK ANTES de llamar:", auth.currentUser.uid);
                             // --- FIN VERIFICACIÓN ---
+                            
+                            // Forzar obtención/refresco del token
+                            console.log("Forzando refresco del token...");
+                            await auth.currentUser.getIdToken(true); // true fuerza el refresco
+                            console.log("Token refrescado (o ya era válido).");
+
 
                             console.log("Chamando Cloud Function 'createCompanyAndAdmin'...");
                             const createCompanyFunction = httpsCallable(functions, 'createCompanyAndAdmin');
