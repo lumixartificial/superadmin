@@ -562,16 +562,30 @@
                 console.log("Modo Criação - Chamando Cloud Function...");
 
                 // --- Llamada Real a la Cloud Function ---
-                try {
-                    console.log("Chamando Cloud Function 'createCompanyAndAdmin'...");
-                    const createCompanyFunction = httpsCallable(functions, 'createCompanyAndAdmin');
-                    const result = await createCompanyFunction({
-                        companyData: companyBaseData,
-                        adminEmail: adminEmail,
-                        adminPassword: adminPassword
-                    });
+                // --- Llamada Real a la Cloud Function (Modificada) ---
+try {
+    console.log("Chamando Cloud Function 'createCompanyAndAdmin'...");
+    const createCompanyFunction = httpsCallable(functions, 'createCompanyAndAdmin');
 
-                    console.log("Resultado da Cloud Function:", result.data);
+    // Crea un objeto NUEVO y LIMPIO para enviar, copiando solo lo necesario
+    const dataToSend = {
+        companyData: {
+            name: companyBaseData.name,
+            settings: { ...companyBaseData.settings }, // Copia superficial de settings
+            plan: { ...companyBaseData.plan }          // Copia superficial de plan
+        },
+        adminEmail: adminEmail,
+        adminPassword: adminPassword
+    };
+
+    console.log("Datos a enviar (limpios):", JSON.stringify(dataToSend)); // Log para verificar
+
+    // Llama a la función pasándole los datos limpios
+    const result = await createCompanyFunction(dataToSend); 
+
+    console.log("Resultado da Cloud Function:", result.data);
+
+    // ... (resto del try...catch sin cambios) ...
 
                     if (result.data.success) {
                         showToast(`Empresa "${companyName}" e Admin criados com sucesso! ID: ${result.data.companyId}`);
