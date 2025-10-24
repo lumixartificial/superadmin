@@ -272,7 +272,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
-        const functions = getFunctions(app);
+        const functions = getFunctions(app, 'us-central1'); // Especifica la región
 
         // --- Variables Globales ---
         let allCompanies = [];
@@ -612,6 +612,7 @@
                             let detailedErrorMessage = 'Falha ao criar a empresa. Verifique os logs da Cloud Function.';
                             if (functionError.code && functionError.message) {
                                 detailedErrorMessage = `Erro (${functionError.code}): ${functionError.message}`;
+                                console.log("Detalles del Error:", functionError.details); // Log adicional
                             } else if (functionError.message) {
                                 detailedErrorMessage = functionError.message;
                             }
