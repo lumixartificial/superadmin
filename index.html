@@ -49,13 +49,13 @@
         html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
         body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text-primary); transition: background-color 0.3s, color 0.3s; }
 
-        @keyframes pulse { /* ... (igual que antes) ... */ }
-        @keyframes subtle-glow { /* ... (igual que antes) ... */ }
+        @keyframes pulse { 0%{transform: scale(1); opacity: .9}50%{transform: scale(1.05); opacity: 1}100%{transform: scale(1); opacity: .9} }
+        @keyframes subtle-glow { 0%,100%{filter: drop-shadow(0 0 8px rgba(138,43,226,.7))}50%{filter: drop-shadow(0 0 16px rgba(57,255,20,.7))} }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
         /* --- Estilos Splash Screen (Opcional, pero recomendado) --- */
-        #splash-screen { /* ... (igual que antes) ... */ }
-        #splash-screen img { /* ... (igual que antes) ... */ }
+        #splash-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg); display: flex; justify-content: center; align-items: center; z-index: 10000; transition: opacity .5s ease-out }
+        #splash-screen img { width: 150px; height: 150px; animation: pulse 2.5s infinite ease-in-out }
 
         /* --- Estilos Login View --- */
         #login-view {
@@ -106,10 +106,100 @@
             display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 160;
         }
         /* --- Otros estilos generales (botones, modales, etc.) --- */
-        .btn-primary, .btn-secondary, .btn-danger { /* ... (estilos base botones) ... */ }
-        .modal-view, .modal-overlay, .modal-content, .modal-header, .modal-content-wrapper, .action-buttons { /* ... (estilos base modales) ... */ }
-        #toast-container, .toast { /* ... (estilos toast) ... */ }
-        /* Añade más estilos según necesites */
+        .btn-primary { background-color: var(--accent-blue); color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-secondary { background-color: transparent; color: var(--accent-blue); border: 1px solid var(--accent-blue); padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-danger { background-color: var(--danger-color); color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
+        
+        /* --- ESTILOS CORREGIDOS PARA MODALES --- */
+        .modal-view, .modal-overlay { 
+            position: fixed; /* Asegura posición fija */
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            z-index: 200; /* Pone el modal por encima */
+        }
+        .modal-view { 
+            background-color: var(--bg); 
+            transform: translateX(100%); /* Empieza fuera de pantalla */
+            transition: transform 0.3s ease-in-out; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        .modal-view.active { 
+            transform: translateX(0); /* Lo trae a la pantalla */
+        }
+        .modal-overlay { 
+            background-color: rgba(0,0,0,0.6); 
+            backdrop-filter: blur(4px); 
+            display: none; /* Oculto por defecto */
+            justify-content: center; 
+            align-items: center; 
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+         }
+         .modal-overlay.active { 
+             display: flex; /* Muestra */
+             opacity: 1; 
+         }
+         .modal-content { 
+             background-color: var(--surface); 
+             padding: 20px; 
+             border-radius: 12px; 
+             width: 90%; 
+             max-width: 500px; 
+             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+         }
+         .modal-header { 
+             display: flex; align-items: center; padding: 15px 20px; 
+             background-color: var(--surface); border-bottom: 1px solid var(--border-color); 
+             flex-shrink: 0; position: sticky; top: 0; z-index: 1; /* Para que quede arriba al hacer scroll */
+         }
+         .modal-header button { background: none; border: none; color: var(--text-primary); cursor: pointer; margin-right: 15px; }
+         .modal-title { font-size: 1.2em; font-weight: 600; }
+         .modal-content-wrapper { flex-grow: 1; overflow-y: auto; }
+         .action-buttons { 
+             background-color: var(--surface); border-top: 1px solid var(--border-color); 
+             padding: 15px 20px; display: flex; gap: 10px; margin-top: auto; 
+             position: sticky; bottom: 0; flex-shrink: 0; 
+         }
+         .action-buttons button { flex-grow: 1; padding: 12px; font-size: 1em; font-weight: 600; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+         .action-buttons button:disabled { background-color: var(--text-secondary); cursor: not-allowed; opacity: 0.7; }
+         /* --- FIN ESTILOS CORREGIDOS MODALES --- */
+
+        #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .toast { background-color: #333; color: white; padding: 10px 18px; border-radius: 6px; box-shadow: 0 3px 10px rgba(0,0,0,0.2); font-size: 0.9em; opacity: 0; transform: translateY(-15px); transition: opacity .3s, transform .3s; }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.toast-error { background-color: var(--danger-color); }
+        .toast.toast-success { background-color: var(--accent-blue); } /* Ajusta color si quieres */
+
+        /* Estilos específicos del formulario de empresa */
+        #companyFormModal .form-group { margin-bottom: 18px; }
+        #companyFormModal .form-group label { margin-bottom: 6px; font-size: 0.9em; }
+        #companyFormModal .form-group input, 
+        #companyFormModal .form-group select, 
+        #companyFormModal .form-group textarea { padding: 10px; }
+        #companyFormModal .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        #companyFormModal .toggle-switch { /* ... estilos toggle ... */ }
+        #companyFormModal .section-title { margin-top: 25px; margin-bottom: 15px; padding-bottom: 8px; font-size: 1.1em; }
+
+        /* Estilos para lista de empresas */
+        #companies-list .company-card { 
+             background-color: var(--surface); padding: 15px 20px; border-radius: 8px; 
+             margin-bottom: 12px; border: 1px solid var(--border-color); 
+             display: flex; justify-content: space-between; align-items: center;
+             cursor: pointer; transition: box-shadow 0.2s, transform 0.2s;
+        }
+        #companies-list .company-card:hover { 
+             transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+        }
+        body.dark-mode #companies-list .company-card:hover {
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1); /* Sombra azulada en modo oscuro */
+        }
+        #companies-list .company-card h4 { margin: 0 0 4px; font-size: 1.1em; }
+        #companies-list .company-card p { font-size: 0.85em; color: var(--text-secondary); margin: 0; }
+        #companies-list .company-card .company-actions button { /* Estilo botones editar/ver */ }
+
     </style>
 </head>
 <body>
@@ -121,7 +211,7 @@
     <div id="login-view">
         <div class="login-card">
             <div class="logo">
-                <img src="URL_DE_TU_LOGO" alt="Logo"> <!-- Usa tu logo -->
+                <img src="https://res.cloudinary.com/dc6as14p0/image/upload/v1759611967/LOGO---LUMIX-FINANZAS-REDUCIDO_gc8zow.png" alt="Logo"> <!-- Usa tu logo -->
             </div>
             <h2>Super Admin Panel</h2>
             <p>Acceso exclusivo.</p>
@@ -159,7 +249,7 @@
         <button class="fab" id="addCompanyBtn" title="Añadir Nueva Empresa"><i data-lucide="plus"></i></button>
     </div>
 
-    <!-- Modales (placeholder) -->
+    <!-- Modales -->
     <div id="companyFormModal" class="modal-view"></div>
     <div id="toast-container"></div>
 
@@ -199,10 +289,12 @@
             const email = emailInput.value.trim();
             const pass = passwordInput.value;
 
-            if (!email || !pass) { /* ... validación ... */ return; }
+            if (!email || !pass) { showToast('Email y contraseña requeridos.', true); return; }
 
             loginButton.disabled = true;
-            loginButton.innerHTML = `Entrando...`; // Simple texto de carga
+            loginButton.innerHTML = `<i data-lucide="loader-circle" style="animation: spin 1s linear infinite; margin-right: 8px;"></i> Entrando...`;
+            lucide.createIcons({ nodes: [loginButton.querySelector('i')] });
+
 
             try {
                 // Intenta iniciar sesión
@@ -240,37 +332,63 @@
                 loginForm.removeEventListener('submit', handleSuperAdminLogin); // Limpia anterior
                 loginForm.addEventListener('submit', handleSuperAdminLogin);
             }
-            lucide.createIcons(); // Asegura íconos en login
+            // Asegura íconos en login si tienes alguno
+            const loginViewIcons = document.getElementById('login-view').querySelectorAll('[data-lucide]');
+            if(loginViewIcons.length > 0) lucide.createIcons({nodes: loginViewIcons});
         }
 
         function loadCompanies() {
             const listContainer = document.getElementById('companies-list');
-            listContainer.innerHTML = '<p>Cargando...</p>'; // Indicador de carga
+            listContainer.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 20px;">Cargando...</p>'; // Indicador de carga mejorado
 
-            // Escucha la colección /companies (que crearemos en Firestore)
+            // Escucha la colección /companies
             onSnapshot(collection(db, 'companies'), (snapshot) => {
                 allCompanies = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderCompaniesList();
             }, (error) => {
                 console.error("Error al cargar empresas:", error);
-                listContainer.innerHTML = '<p style="color: var(--danger-color);">Error al cargar datos.</p>';
+                listContainer.innerHTML = '<p style="text-align: center; color: var(--danger-color); padding: 20px;">Error al cargar datos.</p>';
             });
         }
 
         function renderCompaniesList() {
             const listContainer = document.getElementById('companies-list');
             if (allCompanies.length === 0) {
-                listContainer.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No hay empresas registradas todavía.</p>';
+                listContainer.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 40px 20px;">No hay empresas registradas todavía. Haz clic en el botón "+" para añadir la primera.</p>';
                 return;
             }
-            // Simple lista por ahora
+            // Lista mejorada con estilo de tarjeta
             listContainer.innerHTML = allCompanies.map(company => `
-                <div style="background-color: var(--surface); padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border-color);">
-                    <h4 style="margin: 0 0 5px;">${company.name || 'Nombre no definido'}</h4>
-                    <p style="font-size: 0.9em; color: var(--text-secondary); margin: 0;">ID: ${company.id}</p>
-                    <!-- Aquí irían más detalles y botones de acción (Editar, Ver, Desactivar) -->
+                <div class="company-card" data-company-id="${company.id}">
+                    <div>
+                        <h4>${company.name || 'Nombre no definido'}</h4>
+                        <p>Plan: ${company.plan?.text || company.plan?.duration || 'N/A'} - Valor: ${company.plan?.value || 'N/A'}</p> 
+                    </div>
+                    <div>
+                        <button class="header-btn" data-action="edit" title="Editar Empresa"><i data-lucide="edit"></i></button>
+                        <!-- <button class="header-btn" data-action="view" title="Ver Detalles"><i data-lucide="eye"></i></button> -->
+                    </div>
                 </div>
             `).join('');
+            // Añade listeners a los nuevos botones
+             listContainer.querySelectorAll('.company-card button[data-action="edit"]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Evita que el clic en el botón active el clic en la tarjeta
+                    const companyId = e.currentTarget.closest('.company-card').dataset.companyId;
+                    showCompanyFormModal(companyId); // Abre modal en modo edición
+                });
+            });
+             // Listener para la tarjeta completa (podría llevar a una vista de detalles en el futuro)
+            listContainer.querySelectorAll('.company-card').forEach(card => {
+                card.addEventListener('click', (e) => {
+                     if (e.target.closest('button')) return; // No hacer nada si se hizo clic en un botón
+                     const companyId = card.dataset.companyId;
+                     console.log("Ver detalles de la empresa (Implementación futura):", companyId);
+                     showToast(`Ver detalles de ${allCompanies.find(c=>c.id===companyId)?.name} (Implementación futura)`, false)
+                });
+            });
+
+            lucide.createIcons({ nodes: listContainer.querySelectorAll('[data-lucide]') });
         }
 
         function showCompanyFormModal(companyId = null) {
@@ -325,7 +443,7 @@
                         </select>
                     </div>
                 </div>
-                <div class="form-group">
+                <div class="form-group" style="display: none;"> <!-- Ocultamos el toggle por ahora -->
                      <label class="toggle-switch" style="justify-content: flex-start; gap: 10px;">
                         <input type="checkbox" id="company-require-gps" ${companyData.settings?.requireGps ? 'checked' : ''}>
                         <span class="slider"></span>
@@ -386,8 +504,10 @@
         const companyName = document.getElementById('company-name').value.trim();
         const defaultInterest = parseFloat(document.getElementById('company-default-interest').value) || 20;
         const currency = document.getElementById('company-currency').value || 'BRL';
-        const requireGps = document.getElementById('company-require-gps').checked;
-        const planDuration = document.getElementById('company-plan-duration').value;
+        const requireGps = document.getElementById('company-require-gps').checked; // Aunque oculto, lo leemos
+        const planDurationSelect = document.getElementById('company-plan-duration');
+        const planDuration = planDurationSelect.value;
+        const planDurationText = planDurationSelect.options[planDurationSelect.selectedIndex].text; // Guardamos el texto también
         const planValueInput = document.getElementById('company-plan-value');
         const planValue = parseFloat(planValueInput.value);
 
@@ -411,9 +531,9 @@
         saveButton.innerHTML = `<i data-lucide="loader-circle" style="animation: spin 1s linear infinite;"></i> ${isEditMode ? 'Salvando...' : 'Criando...'}`;
         lucide.createIcons({ nodes: [saveButton.querySelector('i')] });
 
-        // 2. Preparar datos para Firestore y (futura) Cloud Function
+        // 2. Preparar datos para Firestore y Cloud Function
         const companySettings = { defaultInterest, currency, requireGps };
-        const companyPlan = { duration: planDuration, value: planValue, startDate: serverTimestamp() }; // Añadimos fecha de inicio del plan
+        const companyPlan = { duration: planDuration, text: planDurationText, value: planValue, startDate: serverTimestamp() }; // Añadimos fecha y texto
 
         const companyBaseData = {
             name: companyName,
@@ -428,73 +548,55 @@
                 // --- Lógica de Edición (Directo a Firestore) ---
                 console.log("Modo Edição - Atualizando dados da empresa em Firestore...");
                 const companyRef = doc(db, 'companies', companyId);
-                await updateDoc(companyRef, companyBaseData); // Actualiza nombre, settings, plan
+                // Solo actualizamos los campos modificables
+                await updateDoc(companyRef, {
+                     name: companyBaseData.name,
+                     settings: companyBaseData.settings,
+                     plan: companyBaseData.plan // Actualizamos el plan completo
+                });
                 showToast('Empresa atualizada com sucesso!');
                 window.history.back(); // Cierra el modal
 
             } else {
-                // --- Lógica de Creación (Llamada a Cloud Function - ¡¡PENDIENTE!!) ---
-                console.log("Modo Criação - Preparando dados para Cloud Function...");
-
-                // **ESTE ES EL PUNTO CLAVE:**
-                // Aquí NO podemos llamar directamente a createUserWithEmailAndPassword ni setDoc.
-                // Necesitamos llamar a una Cloud Function pasándole los datos.
+                // --- Lógica de Creación (Llamada a Cloud Function) ---
+                console.log("Modo Criação - Chamando Cloud Function...");
 
                 // --- Llamada Real a la Cloud Function ---
-try {
-    console.log("Chamando Cloud Function 'createCompanyAndAdmin'...");
-    // Obtiene una referencia a la función desplegada
-    const createCompanyFunction = httpsCallable(functions, 'createCompanyAndAdmin');
+                try {
+                    console.log("Chamando Cloud Function 'createCompanyAndAdmin'...");
+                    const createCompanyFunction = httpsCallable(functions, 'createCompanyAndAdmin');
+                    const result = await createCompanyFunction({
+                        companyData: companyBaseData,
+                        adminEmail: adminEmail,
+                        adminPassword: adminPassword
+                    });
 
-    // Llama a la función pasándole los datos recolectados
-    const result = await createCompanyFunction({ 
-        companyData: companyBaseData, 
-        adminEmail: adminEmail, 
-        adminPassword: adminPassword 
-    });
+                    console.log("Resultado da Cloud Function:", result.data);
 
-    console.log("Resultado da Cloud Function:", result.data);
+                    if (result.data.success) {
+                        showToast(`Empresa "${companyName}" e Admin criados com sucesso! ID: ${result.data.companyId}`);
+                        window.history.back(); // Cierra el modal si fue exitoso
+                    } else {
+                        throw new Error(result.data.error || 'Erro desconhecido retornado pela Cloud Function.');
+                    }
 
-    // Verifica la respuesta de la función
-    if (result.data.success) {
-        showToast(`Empresa "${companyName}" e Admin criados com sucesso! ID: ${result.data.companyId}`);
-        window.history.back(); // Cierra el modal si fue exitoso
-    } else {
-        // Si la función devolvió success: false o un error específico
-        throw new Error(result.data.error || 'Erro desconhecido retornado pela Cloud Function.');
-    }
-
-} catch (functionError) {
-    // Captura errores al llamar o ejecutar la Cloud Function
-    console.error("Erro ao chamar/executar a Cloud Function:", functionError);
-    // Intenta mostrar un mensaje de error más específico si está disponible
-    let detailedErrorMessage = 'Falha ao criar a empresa. Verifique os logs da Cloud Function.';
-    if (functionError.code && functionError.message) {
-        detailedErrorMessage = `Erro (${functionError.code}): ${functionError.message}`;
-    } else if (functionError.message) {
-        detailedErrorMessage = functionError.message;
-    }
-    showToast(detailedErrorMessage, true);
-    // Mantenemos el modal abierto para que el usuario pueda corregir datos si es necesario
-}
-// --- Fin Llamada Real ---
-
-                // **(Código Real iría aquí)**
-                // const createCompanyFunction = httpsCallable(functions, 'createCompanyAndAdmin');
-                // const result = await createCompanyFunction({ companyData: companyBaseData, adminEmail, adminPassword });
-                // if (result.data.success) {
-                //     showToast('Empresa e Admin criados com sucesso!');
-                //     window.history.back(); // Cierra el modal
-                // } else {
-                //     throw new Error(result.data.error || 'Erro desconhecido na Cloud Function.');
-                // }
-
+                } catch (functionError) {
+                    console.error("Erro ao chamar/executar a Cloud Function:", functionError);
+                    let detailedErrorMessage = 'Falha ao criar a empresa. Verifique os logs da Cloud Function.';
+                    if (functionError.code && functionError.message) {
+                        detailedErrorMessage = `Erro (${functionError.code}): ${functionError.message}`;
+                    } else if (functionError.message) {
+                        detailedErrorMessage = functionError.message;
+                    }
+                    showToast(detailedErrorMessage, true);
+                }
+                // --- Fin Llamada Real ---
             }
-        } catch (error) {
-            console.error("Erro ao salvar/criar empresa:", error);
+        } catch (error) { // Catch para errores generales (como fallo de red en updateDoc)
+            console.error("Erro geral ao salvar/criar empresa:", error);
             showToast(`Erro: ${error.message || 'Ocorreu um problema.'}`, true);
         } finally {
-            // Rehabilita el botón
+            // Rehabilita el botón independientemente del resultado
             saveButton.disabled = false;
             saveButton.innerHTML = `<i data-lucide="save"></i> ${saveButtonText}`;
             lucide.createIcons({ nodes: [saveButton.querySelector('i')] });
@@ -506,29 +608,69 @@ try {
         function setupSuperAdminEventListeners() {
             const logoutBtn = document.getElementById('logout-btn');
             if (logoutBtn) {
-                logoutBtn.addEventListener('click', () => {
-                    signOut(auth).catch(err => console.error("Error al cerrar sesión Super Admin:", err));
-                    // onAuthStateChanged se encargará de mostrar el login
-                });
+                // Remove listener anterior para evitar duplicados al recargar
+                logoutBtn.removeEventListener('click', handleLogout); 
+                logoutBtn.addEventListener('click', handleLogout);
             }
             const addCompanyBtn = document.getElementById('addCompanyBtn');
             if (addCompanyBtn) {
-                addCompanyBtn.addEventListener('click', () => showCompanyFormModal());
+                 // Remove listener anterior
+                addCompanyBtn.removeEventListener('click', handleAddCompanyClick);
+                addCompanyBtn.addEventListener('click', handleAddCompanyClick);
             }
-            // Añadir listeners para editar/ver empresas si implementas botones en renderCompaniesList
+            // Listener de historial para modales (Back button)
+             window.removeEventListener('popstate', handlePopState); // Limpia anterior
+             window.addEventListener('popstate', handlePopState);
         }
 
-        function showToast(message, isError = false) { /* ... (igual que antes) ... */ }
+        // Funciones handler separadas para poder remover listeners
+        function handleLogout() {
+             signOut(auth).catch(err => console.error("Error al cerrar sesión Super Admin:", err));
+        }
+        function handleAddCompanyClick() {
+            showCompanyFormModal();
+        }
+        function handlePopState(event) {
+             // Cierra todos los modales si el usuario navega hacia atrás
+             document.querySelectorAll('.modal-view.active').forEach(modal => {
+                 modal.classList.remove('active');
+             });
+             // Si el estado era de un modal, ya está cerrado. Si no, onAuthStateChanged manejará la vista.
+        }
+
+        function showToast(message, isError = false) {
+             const container = document.getElementById('toast-container');
+             const toast = document.createElement('div');
+             toast.className = `toast ${isError ? 'toast-error' : 'toast-success'}`;
+             toast.textContent = message;
+             container.appendChild(toast);
+             setTimeout(() => toast.classList.add('show'), 10);
+             setTimeout(() => {
+                 toast.classList.remove('show');
+                 setTimeout(() => toast.remove(), 300); // Reduce tiempo de remoción
+             }, isError ? 4000 : 2500); // Más tiempo para errores
+        }
 
         // --- Inicialización ---
         function initSuperAdmin() {
             onAuthStateChanged(auth, (user) => {
                 // Aquí podríamos añadir la verificación de Custom Claims si ya la tuviéramos
                 if (user) {
-                    // Asumimos que si está logueado en ESTA app, es Super Admin
-                    showSuperAdminApp(user);
+                    // **VERIFICACIÓN SUPER ADMIN (IMPORTANTE)**
+                    // Necesitamos asegurarnos de que solo TU cuenta pueda usar esta app.
+                    // Comparamos el UID logueado con tu UID de Super Admin.
+                    const SUPER_ADMIN_UID = "4o3DgFdtLdfOdIqltUH90Sk3Rsi1"; // TU UID
+                    if (user.uid === SUPER_ADMIN_UID) {
+                        showSuperAdminApp(user);
+                    } else {
+                        // Si es otro usuario logueado (quizás un Admin normal), lo deslogueamos
+                        console.warn("Intento de acceso de usuario no Super Admin:", user.uid);
+                        signOut(auth); // Desloguea al usuario no autorizado
+                        showLoginView(); // Muestra el login
+                        showToast("Acceso denegado. Solo el Super Admin puede entrar.", true);
+                    }
                 } else {
-                    showLoginView();
+                    showLoginView(); // Muestra el login si no hay nadie logueado
                 }
             });
         }
