@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Super Admin Panel</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-light: #f1f5f9;
+            --surface-light: #ffffff;
+            --text-primary-light: #0f172a;
+            --text-secondary-light: #64748b;
+            --border-light: #e2e8f0;
+            --accent-blue: #3b82f6;
+            --accent-blue-darker: #2563eb;
+            --danger-light: #ef4444;
+
+            --bg-dark: #020617;
+            --surface-dark: #0f172a;
+            --text-primary-dark: #e2e8f0;
+            --text-secondary-dark: #94a3b8;
+            --border-dark: #1e293b;
+            --danger-dark: #f87171;
+        }
+
+        /* Dark mode por defecto */
+        body {
+            --bg: var(--bg-dark);
+            --surface: var(--surface-dark);
+            --text-primary: var(--text-primary-dark);
+            --text-secondary: var(--text-secondary-dark);
+            --border-color: var(--border-dark);
+            --danger-color: var(--danger-dark);
+        }
+
+        /* Estilos Light mode (si se implementa toggle) */
+        body.light-mode {
+             --bg: var(--bg-light);
+            --surface: var(--surface-light);
+            --text-primary: var(--text-primary-light);
+            --text-secondary: var(--text-secondary-light);
+            --border-color: var(--border-light);
+            --danger-color: var(--danger-light);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text-primary); transition: background-color 0.3s, color 0.3s; }
+
+        @keyframes pulse { /* ... (igual que antes) ... */ }
+        @keyframes subtle-glow { /* ... (igual que antes) ... */ }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* --- Estilos Splash Screen (Opcional, pero recomendado) --- */
+        #splash-screen { /* ... (igual que antes) ... */ }
+        #splash-screen img { /* ... (igual que antes) ... */ }
+
+        /* --- Estilos Login View --- */
+        #login-view {
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            height: 100%; padding: 20px; background-color: var(--bg);
+        }
+        .login-card { /* ... (similar a antes, ajusta si quieres) ... */
+            background-color: transparent; box-shadow: none; border: none;
+            width: 100%; max-width: 400px; text-align: center;
+        }
+        .login-card .logo img { width: 100px; height: 100px; margin-bottom: 20px; filter: grayscale(50%) opacity(80%); } /* Logo diferente o con filtro */
+        .login-card h2 { margin-bottom: 10px; font-size: 1.6em; font-weight: 700; color: var(--text-primary); }
+        .login-card p { margin-bottom: 30px; color: var(--text-secondary); }
+        .login-card .form-group { text-align: left; margin-bottom: 15px; }
+        .login-card .form-group label { display: block; margin-bottom: 6px; font-weight: 500; color: var(--text-secondary); font-size: 0.9em; }
+        .login-card .form-group input { /* ... (similar a antes) ... */
+             width: 100%; padding: 12px; font-size: 1em; border-radius: 8px;
+             border: 1px solid var(--border-color); background-color: var(--surface); color: var(--text-primary);
+             transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .login-card .form-group input:focus { /* ... (similar a antes) ... */
+             border-color: var(--accent-blue); outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+        .login-card .btn-primary { /* ... (similar a antes) ... */
+            width: 100%; padding: 12px; font-size: 1em; font-weight: 600; border: none; border-radius: 8px;
+            cursor: pointer; background-color: var(--accent-blue); color: white; transition: background-color 0.2s; margin-top: 10px;
+        }
+        .login-card .btn-primary:hover { background-color: var(--accent-blue-darker); }
+        .login-card .btn-primary:disabled { background-color: var(--text-secondary); cursor: not-allowed; opacity: 0.7; }
+
+        /* --- Estilos App Container (Placeholder) --- */
+        #app-container { display: none; flex-direction: column; height: 100%; width: 100%; }
+        .main-header { /* ... (similar a antes, ajusta textos/iconos) ... */
+            display: flex; justify-content: space-between; align-items: center; padding: 15px 20px;
+            background-color: var(--surface); border-bottom: 1px solid var(--border-color); flex-shrink: 0;
+        }
+        .header-title { font-size: 1.2em; font-weight: 600; color: var(--text-primary); }
+        .header-controls button { /* ... (estilo botón logout) ... */
+            background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 5px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        }
+        main { flex-grow: 1; overflow-y: auto; }
+        .container { padding: 20px; }
+        .section-title { font-size: 1.3em; font-weight: 600; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
+        .fab { /* ... (estilo FAB para añadir empresa) ... */
+            position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background-color: var(--accent-blue);
+            color: white; border-radius: 50%; border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 160;
+        }
+        /* --- Otros estilos generales (botones, modales, etc.) --- */
+        .btn-primary, .btn-secondary, .btn-danger { /* ... (estilos base botones) ... */ }
+        .modal-view, .modal-overlay, .modal-content, .modal-header, .modal-content-wrapper, .action-buttons { /* ... (estilos base modales) ... */ }
+        #toast-container, .toast { /* ... (estilos toast) ... */ }
+        /* Añade más estilos según necesites */
+    </style>
+</head>
+<body>
+
+    <div id="splash-screen" style="display: none;"> <!-- Opcional -->
+        <img src="URL_DE_TU_LOGO_SI_QUIERES" alt="Loading...">
+    </div>
+
+    <div id="login-view">
+        <div class="login-card">
+            <div class="logo">
+                <img src="URL_DE_TU_LOGO" alt="Logo"> <!-- Usa tu logo -->
+            </div>
+            <h2>Super Admin Panel</h2>
+            <p>Acceso exclusivo.</p>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="superadmin-email">Email</label>
+                    <input type="email" id="superadmin-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="superadmin-password">Contraseña</label>
+                    <input type="password" id="superadmin-password" required>
+                </div>
+                <button type="submit" class="btn-primary">Entrar</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="app-container">
+        <header class="main-header">
+            <span class="header-title">Gestión de Empresas</span>
+            <div class="header-controls">
+                <button id="logout-btn" title="Cerrar Sesión"><i data-lucide="log-out"></i></button>
+            </div>
+        </header>
+        <main>
+            <div id="companies-view" class="view active container">
+                <h2 class="section-title">Empresas Registradas</h2>
+                <div id="companies-list">
+                    <p>Cargando empresas...</p>
+                    <!-- La lista de empresas se cargará aquí -->
+                </div>
+            </div>
+            <!-- Aquí irán otras vistas si son necesarias -->
+        </main>
+        <button class="fab" id="addCompanyBtn" title="Añadir Nueva Empresa"><i data-lucide="plus"></i></button>
+    </div>
+
+    <!-- Modales (placeholder) -->
+    <div id="companyFormModal" class="modal-view"></div>
+    <div id="toast-container"></div>
+
+    <script type="module">
+        // Importa Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-functions.js";
+
+        // --- Configuración de Firebase (Usa la MISMA que tus otras apps) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBRxJjpH6PBi-GRxOXS8klv-8v91sO4X-Y",
+            authDomain: "lumix-financas-app.firebaseapp.com",
+            projectId: "lumix-financas-app",
+            storageBucket: "lumix-financas-app.firebasestorage.app", // O .appspot.com si es el caso
+            messagingSenderId: "463777495321",
+            appId: "1:463777495321:web:106118f53f56abd206ed88" // Asegúrate que sea el correcto
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const functions = getFunctions(app);
+
+        // --- Variables Globales ---
+        let allCompanies = [];
+        let currentSuperAdmin = null;
+
+        // --- Funciones Principales (Implementación básica) ---
+
+        async function handleSuperAdminLogin(event) {
+            event.preventDefault();
+            const emailInput = document.getElementById('superadmin-email');
+            const passwordInput = document.getElementById('superadmin-password');
+            const loginButton = document.querySelector('#login-form button[type="submit"]');
+            const originalButtonHTML = loginButton.innerHTML;
+            const email = emailInput.value.trim();
+            const pass = passwordInput.value;
+
+            if (!email || !pass) { /* ... validación ... */ return; }
+
+            loginButton.disabled = true;
+            loginButton.innerHTML = `Entrando...`; // Simple texto de carga
+
+            try {
+                // Intenta iniciar sesión
+                const userCredential = await signInWithEmailAndPassword(auth, email, pass);
+                // IMPORTANTE: Aquí deberíamos verificar si este usuario es REALMENTE un Super Admin.
+                // Por ahora, asumiremos que si logra iniciar sesión en esta app, lo es.
+                // La verificación real se haría con Custom Claims (más adelante).
+                console.log("Login Super Admin OK:", userCredential.user.uid);
+                // onAuthStateChanged se encargará del resto
+
+            } catch (error) {
+                console.error("Error Login Super Admin:", error);
+                showToast('Email o contraseña incorrectos.', true);
+                loginButton.disabled = false;
+                loginButton.innerHTML = originalButtonHTML;
+            }
+        }
+
+        function showSuperAdminApp(user) {
+            currentSuperAdmin = user; // Guarda el usuario Super Admin
+            document.getElementById('login-view').style.display = 'none';
+            document.getElementById('app-container').style.display = 'flex';
+            // Llama a funciones para cargar datos y configurar listeners
+            loadCompanies();
+            setupSuperAdminEventListeners();
+            lucide.createIcons();
+        }
+
+        function showLoginView() {
+            currentSuperAdmin = null;
+            document.getElementById('app-container').style.display = 'none';
+            document.getElementById('login-view').style.display = 'flex';
+            const loginForm = document.getElementById('login-form');
+            if (loginForm) {
+                loginForm.removeEventListener('submit', handleSuperAdminLogin); // Limpia anterior
+                loginForm.addEventListener('submit', handleSuperAdminLogin);
+            }
+            lucide.createIcons(); // Asegura íconos en login
+        }
+
+        function loadCompanies() {
+            const listContainer = document.getElementById('companies-list');
+            listContainer.innerHTML = '<p>Cargando...</p>'; // Indicador de carga
+
+            // Escucha la colección /companies (que crearemos en Firestore)
+            onSnapshot(collection(db, 'companies'), (snapshot) => {
+                allCompanies = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderCompaniesList();
+            }, (error) => {
+                console.error("Error al cargar empresas:", error);
+                listContainer.innerHTML = '<p style="color: var(--danger-color);">Error al cargar datos.</p>';
+            });
+        }
+
+        function renderCompaniesList() {
+            const listContainer = document.getElementById('companies-list');
+            if (allCompanies.length === 0) {
+                listContainer.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No hay empresas registradas todavía.</p>';
+                return;
+            }
+            // Simple lista por ahora
+            listContainer.innerHTML = allCompanies.map(company => `
+                <div style="background-color: var(--surface); padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border-color);">
+                    <h4 style="margin: 0 0 5px;">${company.name || 'Nombre no definido'}</h4>
+                    <p style="font-size: 0.9em; color: var(--text-secondary); margin: 0;">ID: ${company.id}</p>
+                    <!-- Aquí irían más detalles y botones de acción (Editar, Ver, Desactivar) -->
+                </div>
+            `).join('');
+        }
+
+        function showCompanyFormModal(companyId = null) {
+    const isEditMode = companyId !== null;
+    const companyData = isEditMode ? allCompanies.find(c => c.id === companyId) : {}; // Obtiene datos si edita
+    // En modo edición, no podemos editar el admin inicial aquí, solo datos de la empresa/plan
+
+    const modal = document.getElementById('companyFormModal');
+    if (!modal) return;
+
+    const modalTitle = isEditMode ? 'Editar Empresa' : 'Registrar Nova Empresa Financeira';
+    const saveButtonText = isEditMode ? 'Salvar Alterações' : 'Criar Empresa e Admin';
+
+    // Opciones de planes
+    const planOptions = [
+        { value: '1m', text: '1 Mês' },
+        { value: '3m', text: '3 Meses' },
+        { value: '6m', text: '6 Meses' },
+        { value: '1y', text: '1 Ano' },
+        { value: '3y', text: '3 Anos' }
+    ];
+
+    modal.innerHTML = `
+        <header class="modal-header">
+            <button id="closeCompanyFormModal"><i data-lucide="arrow-left"></i></button>
+            <span class="modal-title">${modalTitle}</span>
+        </header>
+        <div class="modal-content-wrapper container">
+            <form id="company-form">
+
+                <h3 class="section-title" style="margin-top: 10px; font-size: 1.1em;">Dados da Empresa</h3>
+
+                <div class="form-group">
+                    <label for="company-name">Nome da Empresa Financeira</label>
+                    <input type="text" id="company-name" required value="${companyData.name || ''}">
+                </div>
+
+                <!-- Configurações Iniciais Opcionais -->
+                <div class="form-group grid-2">
+                    <div>
+                        <label for="company-default-interest">Juros Padrão (%)</label>
+                        <input type="number" id="company-default-interest" step="0.1" value="${companyData.settings?.defaultInterest || '20'}">
+                    </div>
+                    <div>
+                        <label for="company-currency">Moeda Principal</label>
+                        <select id="company-currency">
+                             <!-- Aquí podrías poblar con tus CURRENCY_CONFIGS si las traes a esta app -->
+                             <option value="BRL" ${ (companyData.settings?.currency || 'BRL') === 'BRL' ? 'selected' : '' }>BRL (Real)</option>
+                             <option value="COP" ${ (companyData.settings?.currency || 'BRL') === 'COP' ? 'selected' : '' }>COP (Peso Col.)</option>
+                             <option value="USD" ${ (companyData.settings?.currency || 'BRL') === 'USD' ? 'selected' : '' }>USD (Dólar)</option>
+                             <!-- Añade más monedas si es necesario -->
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                     <label class="toggle-switch" style="justify-content: flex-start; gap: 10px;">
+                        <input type="checkbox" id="company-require-gps" ${companyData.settings?.requireGps ? 'checked' : ''}>
+                        <span class="slider"></span>
+                        <span>Exigir GPS dos Cobradores</span>
+                     </label>
+                </div>
+
+
+                <h3 class="section-title" style="margin-top: 30px; font-size: 1.1em;">Plano e Pagamento</h3>
+
+                <div class="form-group grid-2">
+                    <div>
+                        <label for="company-plan-duration">Duração do Plano</label>
+                        <select id="company-plan-duration">
+                            ${planOptions.map(opt => `<option value="${opt.value}" ${companyData.plan?.duration === opt.value ? 'selected' : ''}>${opt.text}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="company-plan-value">Valor (Mensalidade/Período)</label>
+                        <input type="number" id="company-plan-value" step="0.01" required value="${companyData.plan?.value || ''}" placeholder="Ex: 150.00">
+                    </div>
+                </div>
+
+                <!-- Solo mostramos campos de Admin al CREAR -->
+                ${!isEditMode ? `
+                <h3 class="section-title" style="margin-top: 30px; font-size: 1.1em;">Dados do Administrador Principal</h3>
+
+                <div class="form-group">
+                    <label for="admin-email">Email do Admin</label>
+                    <input type="email" id="admin-email" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="admin-password">Senha Temporária do Admin</label>
+                    <input type="password" id="admin-password" required autocomplete="new-password">
+                    <p style="font-size: 0.8em; color: var(--text-secondary); margin-top: 5px;">Mínimo 6 caracteres. O admin deverá alterá-la no primeiro acesso.</p>
+                </div>
+                ` : ''}
+
+            </form>
+        </div>
+        <div class="action-buttons">
+            <button id="saveCompanyBtn" class="btn-primary"><i data-lucide="save"></i> ${saveButtonText}</button>
+        </div>
+    `;
+
+    // Añade estado al historial y muestra el modal
+    history.pushState({ modal: 'companyFormModal' }, modalTitle, '#company-form');
+    modal.classList.add('active');
+    lucide.createIcons({ nodes: modal.querySelectorAll('[data-lucide]') });
+
+    // --- Event Listeners del Modal ---
+    modal.querySelector('#closeCompanyFormModal').addEventListener('click', () => window.history.back());
+    modal.querySelector('#saveCompanyBtn').addEventListener('click', async (e) => {
+        const saveButton = e.currentTarget;
+        const originalButtonHTML = saveButton.innerHTML;
+
+        // 1. Recolectar datos del formulario
+        const companyName = document.getElementById('company-name').value.trim();
+        const defaultInterest = parseFloat(document.getElementById('company-default-interest').value) || 20;
+        const currency = document.getElementById('company-currency').value || 'BRL';
+        const requireGps = document.getElementById('company-require-gps').checked;
+        const planDuration = document.getElementById('company-plan-duration').value;
+        const planValueInput = document.getElementById('company-plan-value');
+        const planValue = parseFloat(planValueInput.value);
+
+        const adminEmailInput = document.getElementById('admin-email'); // Puede ser null si isEditMode
+        const adminPasswordInput = document.getElementById('admin-password'); // Puede ser null si isEditMode
+        const adminEmail = adminEmailInput ? adminEmailInput.value.trim() : null;
+        const adminPassword = adminPasswordInput ? adminPasswordInput.value : null;
+
+        // Validaciones básicas
+        if (!companyName || isNaN(planValue) || planValue <= 0) {
+            showToast('Nome da empresa e valor do plano são obrigatórios.', true);
+            return;
+        }
+        if (!isEditMode && (!adminEmail || !adminPassword || adminPassword.length < 6)) {
+            showToast('Email e senha (mín. 6 caracteres) para o admin são obrigatórios.', true);
+            return;
+        }
+
+        // Deshabilita botón y muestra carga
+        saveButton.disabled = true;
+        saveButton.innerHTML = `<i data-lucide="loader-circle" style="animation: spin 1s linear infinite;"></i> ${isEditMode ? 'Salvando...' : 'Criando...'}`;
+        lucide.createIcons({ nodes: [saveButton.querySelector('i')] });
+
+        // 2. Preparar datos para Firestore y (futura) Cloud Function
+        const companySettings = { defaultInterest, currency, requireGps };
+        const companyPlan = { duration: planDuration, value: planValue, startDate: serverTimestamp() }; // Añadimos fecha de inicio del plan
+
+        const companyBaseData = {
+            name: companyName,
+            settings: companySettings,
+            plan: companyPlan,
+            // adminUserIds se llenará/actualizará desde la Cloud Function
+            // createdAt se añadirá desde la Cloud Function al crear
+        };
+
+        try {
+            if (isEditMode) {
+                // --- Lógica de Edición (Directo a Firestore) ---
+                console.log("Modo Edição - Atualizando dados da empresa em Firestore...");
+                const companyRef = doc(db, 'companies', companyId);
+                await updateDoc(companyRef, companyBaseData); // Actualiza nombre, settings, plan
+                showToast('Empresa atualizada com sucesso!');
+                window.history.back(); // Cierra el modal
+
+            } else {
+                // --- Lógica de Creación (Llamada a Cloud Function - ¡¡PENDIENTE!!) ---
+                console.log("Modo Criação - Preparando dados para Cloud Function...");
+
+                // **ESTE ES EL PUNTO CLAVE:**
+                // Aquí NO podemos llamar directamente a createUserWithEmailAndPassword ni setDoc.
+                // Necesitamos llamar a una Cloud Function pasándole los datos.
+
+                // --- Llamada Real a la Cloud Function ---
+try {
+    console.log("Chamando Cloud Function 'createCompanyAndAdmin'...");
+    // Obtiene una referencia a la función desplegada
+    const createCompanyFunction = httpsCallable(functions, 'createCompanyAndAdmin');
+
+    // Llama a la función pasándole los datos recolectados
+    const result = await createCompanyFunction({ 
+        companyData: companyBaseData, 
+        adminEmail: adminEmail, 
+        adminPassword: adminPassword 
+    });
+
+    console.log("Resultado da Cloud Function:", result.data);
+
+    // Verifica la respuesta de la función
+    if (result.data.success) {
+        showToast(`Empresa "${companyName}" e Admin criados com sucesso! ID: ${result.data.companyId}`);
+        window.history.back(); // Cierra el modal si fue exitoso
+    } else {
+        // Si la función devolvió success: false o un error específico
+        throw new Error(result.data.error || 'Erro desconhecido retornado pela Cloud Function.');
+    }
+
+} catch (functionError) {
+    // Captura errores al llamar o ejecutar la Cloud Function
+    console.error("Erro ao chamar/executar a Cloud Function:", functionError);
+    // Intenta mostrar un mensaje de error más específico si está disponible
+    let detailedErrorMessage = 'Falha ao criar a empresa. Verifique os logs da Cloud Function.';
+    if (functionError.code && functionError.message) {
+        detailedErrorMessage = `Erro (${functionError.code}): ${functionError.message}`;
+    } else if (functionError.message) {
+        detailedErrorMessage = functionError.message;
+    }
+    showToast(detailedErrorMessage, true);
+    // Mantenemos el modal abierto para que el usuario pueda corregir datos si es necesario
+}
+// --- Fin Llamada Real ---
+
+                // **(Código Real iría aquí)**
+                // const createCompanyFunction = httpsCallable(functions, 'createCompanyAndAdmin');
+                // const result = await createCompanyFunction({ companyData: companyBaseData, adminEmail, adminPassword });
+                // if (result.data.success) {
+                //     showToast('Empresa e Admin criados com sucesso!');
+                //     window.history.back(); // Cierra el modal
+                // } else {
+                //     throw new Error(result.data.error || 'Erro desconhecido na Cloud Function.');
+                // }
+
+            }
+        } catch (error) {
+            console.error("Erro ao salvar/criar empresa:", error);
+            showToast(`Erro: ${error.message || 'Ocorreu um problema.'}`, true);
+        } finally {
+            // Rehabilita el botón
+            saveButton.disabled = false;
+            saveButton.innerHTML = `<i data-lucide="save"></i> ${saveButtonText}`;
+            lucide.createIcons({ nodes: [saveButton.querySelector('i')] });
+        }
+    }); // Fin listener saveCompanyBtn
+
+} // Fin showCompanyFormModal
+
+        function setupSuperAdminEventListeners() {
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', () => {
+                    signOut(auth).catch(err => console.error("Error al cerrar sesión Super Admin:", err));
+                    // onAuthStateChanged se encargará de mostrar el login
+                });
+            }
+            const addCompanyBtn = document.getElementById('addCompanyBtn');
+            if (addCompanyBtn) {
+                addCompanyBtn.addEventListener('click', () => showCompanyFormModal());
+            }
+            // Añadir listeners para editar/ver empresas si implementas botones en renderCompaniesList
+        }
+
+        function showToast(message, isError = false) { /* ... (igual que antes) ... */ }
+
+        // --- Inicialización ---
+        function initSuperAdmin() {
+            onAuthStateChanged(auth, (user) => {
+                // Aquí podríamos añadir la verificación de Custom Claims si ya la tuviéramos
+                if (user) {
+                    // Asumimos que si está logueado en ESTA app, es Super Admin
+                    showSuperAdminApp(user);
+                } else {
+                    showLoginView();
+                }
+            });
+        }
+
+        initSuperAdmin(); // Llama a la inicialización
+
+    </script>
+</body>
+</html>
