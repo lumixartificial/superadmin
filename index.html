@@ -835,7 +835,7 @@
 
                     </form>
                 
-                // ...
+                
                 </div>
                 <div class="action-buttons" style="flex-wrap: wrap;"> <!-- 'flex-wrap' añadido para móviles -->
                     
@@ -860,7 +860,7 @@
 
                 </div>
             `;
-// ...
+
 
             // --- FIN HTML RECONSTRUIDO ---
 
@@ -1203,9 +1203,92 @@
                     }
                 }
 
-            });
+            }); // <-- Este es el cierre del listener de #saveCompanyBtn
 
             
+            // --- NUEVO: Listener para el Botón de Eliminar ---
+            if (isEditMode) {
+                const deleteButton = modal.querySelector('#deleteCompanyBtn');
+                deleteButton.addEventListener('click', async (e) => {
+                    
+                    // 1. Mostrar NUESTRO modal de confirmación
+                    const confirmed = await showConfirmationModal(
+                        '¿Eliminar Empresa?',
+                        `¿Estás seguro de que deseas eliminar "${companyData.name}"? Esta acción es irreversible y eliminará a todos los usuarios admin asociados.`,
+                        'Sim, Eliminar',
+                        'btn-danger'
+                    );
+
+                    if (!confirmed) {
+                        return; // El usuario canceló
+                    }
+
+                    // 2. Si confirma, proceder con la eliminación
+                    // ¡CORRECCIÓN! Solo guardamos el HTML original.
+                    const originalButtonHTML = deleteButton.innerHTML;
+
+                    try { // <-- EL TRY EMPIEZA ANTES
+
+                        // --- LÓGICA MOVIDA DENTRO DEL TRY ---
+                        deleteButton.disabled = true;
+                        deleteButton.innerHTML = `<i data-lucide="loader-circle" style="animation: spin 1s linear infinite;"></i> Eliminando...`;
+                        lucide.createIcons({ nodes: [deleteButton.querySelector('i')] });
+                        // --- FIN DE LA LÓGICA MOVIDA ---
+
+                        if (!auth.currentUser) throw new Error("Usuário Super Admin não autenticado.");
+                        
+                        // 3. Obtener token
+                        const idToken = await auth.currentUser.getIdToken(true);
+                        // Esta es la URL de tu función de eliminación
+                        const functionUrl = "https://us-central1-lumix-financas-app.cloudfunctions.net/deleteCompanyAndAdmin";
+
+                        // 4. Preparar datos (companyId y adminUserIds)
+                        const dataToSend = {
+                            companyId: companyId, // Ya lo tenemos del scope de showCompanyFormModal
+                            adminUserIds: companyData.adminUserIds || [] // De los datos de la empresa
+                        };
+
+                        console.log("Enviando para eliminar:", dataToSend);
+
+                        // 5. Llamar a la Cloud Function
+                        const response = await fetch(functionUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${idToken}`
+                            },
+                            body: JSON.stringify({ data: dataToSend })
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json().catch(() => ({}));
+                            const errorMessage = errorData.error?.message || `Error HTTP ${response.status}`;
+                            throw new Error(errorMessage);
+                        }
+
+                        const resultWrapper = await response.json();
+                        if (resultWrapper.error) throw new Error(resultWrapper.error.message);
+
+                        // 6. Éxito
+                        showToast(`Empresa "${companyData.name}" eliminada com sucesso!`);
+                        window.history.back(); // Cierra el modal de edición
+                        // onSnapshot se encargará de actualizar la lista automáticamente
+
+                    } catch (error) {
+                        console.error("Erro ao eliminar empresa:", error);
+                        showToast(`Erro ao eliminar: ${error.message}`, true);
+                        // Restaura el botón si falla
+                        deleteButton.disabled = false;
+                        deleteButton.innerHTML = originalButtonHTML;
+                        // Re-renderiza el ícono si el botón todavía existe
+                        if (document.body.contains(deleteButton)) {
+                             const icon = deleteButton.querySelector('i');
+                             if(icon) lucide.createIcons({ nodes: [icon] });
+                        }
+                    }
+                });
+            }
+            // --- FIN NUEVO LISTENER ---
 
 
             // Listener popstate (sin cambios)
@@ -1267,6 +1350,75 @@
                 }, { once: true });
             }, 3000);
         }
+
+        // --- (NUEVO) PASO 1: CÓDIGO DEL MODAL DE CONFIRMACIÓN ---
+        /**
+         * Muestra un modal de confirmación genérico usando los estilos CSS existentes.
+         * @param {string} title - El título del modal.
+         * @param {string} message - El mensaje de confirmación.
+         * @param {string} confirmText - El texto del botón de confirmación (ej: "Eliminar").
+         * @param {string} confirmClass - 'btn-danger' o 'btn-primary'.
+         * @returns {Promise<boolean>} - Resuelve 'true' si se confirma, 'false' si se cancela.
+         */
+        function showConfirmationModal(title, message, confirmText = 'Confirmar', confirmClass = 'btn-danger') {
+            return new Promise((resolve) => {
+                // Prevenir múltiples modales
+                if (document.getElementById('confirmation-modal-overlay')) {
+                    document.getElementById('confirmation-modal-overlay').remove();
+                }
+
+                const modalOverlay = document.createElement('div');
+                modalOverlay.id = 'confirmation-modal-overlay';
+                // Usa las clases CSS que ya definiste en tu <style>
+                modalOverlay.className = 'modal-overlay'; 
+
+                modalOverlay.innerHTML = `
+                    <div class="modal-content" style="max-width: 450px; transform: scale(0.95); opacity: 0; transition: transform 0.2s ease, opacity 0.2s ease;">
+                        <h3 style="font-size: 1.25em; font-weight: 600; margin-top: 0; margin-bottom: 10px;">${title}</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 25px; line-height: 1.5;">${message}</p>
+                        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                            <button id="confirm-cancel" class="btn-secondary" style="background-color: var(--surface); border-color: var(--border-color); color: var(--text-secondary);">Cancelar</button>
+                            <button id="confirm-accept" class="${confirmClass}">${confirmText}</button>
+                        </div>
+                    </div>
+                `;
+
+                document.body.appendChild(modalOverlay);
+
+                const modalContent = modalOverlay.querySelector('.modal-content');
+                const btnCancel = modalOverlay.querySelector('#confirm-cancel');
+                const btnAccept = modalOverlay.querySelector('#confirm-accept');
+
+                // Forzar reflow para la animación de entrada
+                requestAnimationFrame(() => {
+                    modalOverlay.classList.add('active'); // Muestra el overlay (opacity 0 a 1)
+                    modalContent.style.transform = 'scale(1)';
+                    modalContent.style.opacity = '1';
+                });
+
+                const close = (result) => {
+                    modalContent.style.transform = 'scale(0.95)';
+                    modalContent.style.opacity = '0';
+                    modalOverlay.classList.remove('active');
+                    
+                    // Espera a que termine la animación de salida
+                    modalOverlay.addEventListener('transitionend', () => {
+                        if (document.body.contains(modalOverlay)) {
+                            document.body.removeChild(modalOverlay);
+                        }
+                        resolve(result); // Resuelve la promesa
+                    }, { once: true });
+                };
+
+                // Event Listeners
+                modalOverlay.addEventListener('click', () => close(false)); // Clic en el fondo
+                modalContent.addEventListener('click', e => e.stopPropagation()); // Evita que el clic en el modal lo cierre
+                btnCancel.addEventListener('click', () => close(false));
+                btnAccept.addEventListener('click', () => close(true));
+            });
+        }
+        // --- FIN DEL BLOQUE DE CÓDIGO QUE FALTABA ---
+
 
         // --- Inicialización y Autenticación ---
         function initializeAppLogic() {
