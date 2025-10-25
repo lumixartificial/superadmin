@@ -533,15 +533,57 @@
                 // ¡IMPORTANTE! Esto es un marcador de posición.
                 // No podemos calcular "Vencido" o "Próximo a Vencer"
                 // hasta que guardemos una fecha de 'createdAt' y 'planEndDate'.
+                
+
                 let statusKey = 'Pago';
                 let statusClass = 'status-paid';
                 let statusIcon = 'check-circle';
-                
-                if (planType === 'demo') {
-                   statusKey = 'Demo'; 
-                   statusClass = 'status-pending'; // Usamos la clase naranja/amarilla
-                   statusIcon = 'clock';
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // Ignora la hora para la comparación
+
+                // Calcula la fecha de creación
+                const createdAtTimestamp = company.createdAt; // Timestamp de Firestore
+                const createdAtDate = createdAtTimestamp?.seconds ? new Date(createdAtTimestamp.seconds * 1000) : null;
+                const createdAtFormatted = createdAtDate ? createdAtDate.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A';
+
+                // Calcula el estado basado en planEndDate
+                const planEndDateTimestamp = company.planEndDate; // Timestamp de Firestore
+                const planEndDate = planEndDateTimestamp?.seconds ? new Date(planEndDateTimestamp.seconds * 1000) : null;
+
+                if (planEndDate) {
+                    planEndDate.setHours(0, 0, 0, 0); // Ignora la hora
+
+                    // Calcula la diferencia en días
+                    const diffTime = planEndDate - today;
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                    if (diffDays < 0) {
+                        statusKey = 'Vencido';
+                        statusClass = 'status-due'; // Rojo
+                        statusIcon = 'alert-circle';
+                    } else if (diffDays <= 7) {
+                        statusKey = `Vence em ${diffDays}d`; // Próximo a vencer
+                        statusClass = 'status-pending'; // Naranja/Amarillo
+                        statusIcon = 'clock';
+                    } else {
+                        // Si faltan más de 7 días, se considera 'Pago' (Verde)
+                        statusKey = 'Pago';
+                        statusClass = 'status-paid';
+                        statusIcon = 'check-circle';
+                    }
+                } else if (planType === 'demo') {
+                    // Si es Demo pero no tiene fecha de fin (¿datos antiguos?), marca como pendiente
+                    statusKey = 'Demo (Ativo)';
+                    statusClass = 'status-pending';
+                    statusIcon = 'clock';
+                } else {
+                     // Si es Pro sin fecha de fin (¿datos antiguos?), marca como pago
+                    statusKey = 'Pago';
+                    statusClass = 'status-paid';
+                    statusIcon = 'check-circle';
                 }
+
+
                 // --- FIN LÓGICA DE ESTADO (PLACEHOLDER) ---
 
                 // --- Lógica de Fecha (PLACEHOLDER) ---
@@ -577,7 +619,7 @@
                     <div class="company-card-details">
                         <span class="detail-item">
                             <i data-lucide="calendar"></i>
-                            ${createdAt}
+                            ${createdAtFormatted}
                         </span>
                         <span class="detail-item">
                             <i data-lucide="users"></i>
@@ -1171,4 +1213,3 @@
     </script>
 </body>
 </html>
-
