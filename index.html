@@ -541,16 +541,30 @@
                     <form id="company-form">
 
                         <!-- Paso 1: Datos de la Empresa (Común) -->
-                        <h3 class="section-title" style="margin-top: 10px; font-size: 1.1em;">Dados da Empresa</h3>
+                        <h3 class="section-title" style="margin-top: 10px; font-size: 1.1em;">Dados da Empresa e Proprietário</h3>
                         <div class="form-group">
                             <label for="company-name">Nome da Empresa Financeira</label>
                             <input type="text" id="company-name" required value="${companyData.name || ''}">
                         </div>
-                        <div class="form-group grid-2">
+                        <div class="form-group">
+                            <label for="owner-name">Nome do Proprietário</label>
+                            <input type="text" id="owner-name" required value="${companyData.owner?.name || ''}">
+                        </div>
+                         <div class="form-group grid-2">
                              <div>
-                                <label for="company-default-interest">Juros Padrão (%)</label>
-                                <input type="number" id="company-default-interest" step="0.1" value="${companyData.settings?.defaultInterest || '20'}" ${isEditMode ? 'readonly' : ''}> <!-- No editable en modo edición por ahora -->
+                                <label for="owner-document">Número de Documento (Proprietário)</label>
+                                <input type="text" id="owner-document" value="${companyData.owner?.document || ''}">
+                             </div>
+                            <div>
+                                <label for="owner-whatsapp">WhatsApp (Proprietário)</label>
+                                <input type="tel" id="owner-whatsapp" value="${companyData.owner?.whatsapp || ''}">
                             </div>
+                        </div>
+                         <div class="form-group grid-2">
+                            <div>
+                                <label for="company-city">Cidade da Empresa</label>
+                                <input type="text" id="company-city" value="${companyData.city || ''}">
+                             </div>
                             <div>
                                 <label for="company-currency">Moeda Principal</label>
                                 <select id="company-currency" ${isEditMode ? 'disabled' : ''}> <!-- No editable en modo edición por ahora -->
@@ -558,6 +572,7 @@
                                 </select>
                             </div>
                         </div>
+
 
                         <!-- Paso 2: Tipo de Cuenta (Solo en Creación) -->
                         ${!isEditMode ? `
@@ -705,7 +720,10 @@
 
                 // 1. Recolectar datos COMUNES
                 const companyName = document.getElementById('company-name').value.trim();
-                const defaultInterest = parseFloat(document.getElementById('company-default-interest').value) || 20;
+                const ownerName = document.getElementById('owner-name').value.trim(); // NUEVO
+                const ownerDocument = document.getElementById('owner-document').value.trim(); // NUEVO
+                const ownerWhatsapp = document.getElementById('owner-whatsapp').value.trim(); // NUEVO
+                const companyCity = document.getElementById('company-city').value.trim(); // NUEVO
                 const currency = document.getElementById('company-currency').value || 'BRL';
                 const requireGps = false; // Hardcoded por ahora
 
@@ -714,9 +732,9 @@
                 const adminEmail = adminEmailInput ? adminEmailInput.value.trim() : null;
                 const adminPassword = adminPasswordInput ? adminPasswordInput.value : null;
 
-                // Validaciones básicas
-                if (!companyName) {
-                    showToast('O nome da empresa é obrigatório.', true); return;
+                // Validaciones básicas (incluyendo nuevos campos)
+                if (!companyName || !ownerName || !ownerDocument || !ownerWhatsapp || !companyCity) { // NUEVA VALIDACIÓN
+                    showToast('Preencha todos os dados da empresa e do proprietário.', true); return;
                 }
                 if (!isEditMode && (!adminEmail || !adminPassword || adminPassword.length < 6)) {
                     showToast('Email e senha (mín. 6 caracteres) para o admin são obrigatórios.', true); return;
@@ -728,13 +746,17 @@
                 lucide.createIcons({ nodes: [saveButton.querySelector('i')] });
 
                 // 2. Preparar datos
-                const companySettings = { defaultInterest, currency, requireGps };
+                const companySettings = { currency, requireGps }; // Eliminado defaultInterest
+                const ownerData = { // NUEVO objeto para datos del propietario
+                    name: ownerName,
+                    document: ownerDocument,
+                    whatsapp: ownerWhatsapp
+                };
                 let companyPlan = {}; // Objeto de plan vacío
 
                 try {
                     if (isEditMode) {
                         // --- Lógica de Edición ---
-                        // Solo actualiza el nombre y el valor del plan por ahora
                         const newPlanValue = parseFloat(document.getElementById('edit-plan-value').value);
                         if (isNaN(newPlanValue) || newPlanValue < 0) {
                              showToast('Valor do plano inválido.', true);
@@ -746,8 +768,10 @@
                         console.log("Modo Edição - Atualizando dados...");
                         await updateDoc(doc(db, 'companies', companyId), {
                              name: companyName,
+                             owner: ownerData, // Actualiza datos del propietario
+                             city: companyCity, // Actualiza ciudad
                              plan: companyPlan // Solo actualizamos nombre y plan (que contiene el valor)
-                             // Settings no se actualizan en edición por ahora
+                             // Settings (moneda) no se actualizan en edición por ahora
                         });
                         showToast('Empresa atualizada com sucesso!');
                         window.history.back();
@@ -826,6 +850,8 @@
 
                         const companyBaseData = {
                             name: companyName,
+                            owner: ownerData, // Incluye datos del propietario
+                            city: companyCity, // Incluye ciudad
                             settings: companySettings,
                             plan: companyPlan // Envía el objeto de plan estructurado
                         };
@@ -842,7 +868,7 @@
                             const functionUrl = "https://us-central1-lumix-financas-app.cloudfunctions.net/createCompanyAndAdmin";
 
                             const dataToSend = {
-                                companyData: companyBaseData, // Envía el nuevo objeto con plan detallado
+                                companyData: companyBaseData, // Envía el nuevo objeto con plan detallado y owner
                                 adminEmail: adminEmail,
                                 adminPassword: adminPassword
                             };
@@ -884,7 +910,8 @@
                             console.log("Detalles completos del Error:", functionError);
                         } finally {
                              // Reactiva el botón SOLO SI HUBO ERROR en la función
-                             if (!saveButton.disabled) { // Si no se desactivó por error de validación
+                             // Corrección: Reactivar siempre, pero SÓLO si no se cerró el modal
+                             if (document.getElementById('companyFormModal').classList.contains('active')) {
                                 saveButton.disabled = false;
                                 saveButton.innerHTML = originalButtonHTML;
                                 if (document.body.contains(saveButton)) {
@@ -1006,4 +1033,3 @@
     </script>
 </body>
 </html>
-
