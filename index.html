@@ -72,26 +72,26 @@
         .login-card .form-group { text-align: left; margin-bottom: 15px; }
         .login-card .form-group label { display: block; margin-bottom: 6px; font-weight: 500; color: var(--text-secondary); font-size: 0.9em; }
         .login-card .form-group input { /* ... (similar a antes) ... */
-             width: 100%; padding: 15px; font-size: 1em; border-radius: 8px; 
-             border: 1px solid #334155; 
-             background-color: #1e293b; 
-             color: var(--text-primary); 
+             width: 100%; padding: 15px; font-size: 1em; border-radius: 8px;
+             border: 1px solid #334155;
+             background-color: #1e293b;
+             color: var(--text-primary);
              transition: border-color 0.2s, box-shadow 0.2s;
         }
         .login-card .form-group input:focus { /* ... (similar a antes) ... */
              border-color: var(--accent-blue); outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
         }
         .login-card .btn-primary { /* ... (similar a antes) ... */
-            width: 100%; 
-            padding: 15px; 
+            width: 100%;
+            padding: 15px;
             font-size: 1.1em;
             font-weight: 600;
-            border: none; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            background-color: var(--accent-blue); 
-            color: white; 
-            transition: background-color 0.2s; 
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background-color: var(--accent-blue);
+            color: white;
+            transition: background-color 0.2s;
             margin-top: 10px;
         }
         .login-card .btn-primary:hover { background-color: var(--accent-blue-darker); }
@@ -120,59 +120,59 @@
         .btn-primary { background-color: var(--accent-blue); color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
         .btn-secondary { background-color: transparent; color: var(--accent-blue); border: 1px solid var(--accent-blue); padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
         .btn-danger { background-color: var(--danger-color); color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
-        
+
         /* --- ESTILOS CORREGIDOS PARA MODALES --- */
-        .modal-view, .modal-overlay { 
+        .modal-view, .modal-overlay {
             position: fixed; /* Asegura posición fija */
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             z-index: 200; /* Pone el modal por encima */
         }
-        .modal-view { 
-            background-color: var(--bg); 
+        .modal-view {
+            background-color: var(--bg);
             transform: translateX(100%); /* Empieza fuera de pantalla */
-            transition: transform 0.3s ease-in-out; 
-            display: flex; 
-            flex-direction: column; 
+            transition: transform 0.3s ease-in-out;
+            display: flex;
+            flex-direction: column;
         }
-        .modal-view.active { 
+        .modal-view.active {
             transform: translateX(0); /* Lo trae a la pantalla */
         }
-        .modal-overlay { 
-            background-color: rgba(0,0,0,0.6); 
-            backdrop-filter: blur(4px); 
+        .modal-overlay {
+            background-color: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
             display: none; /* Oculto por defecto */
-            justify-content: center; 
-            align-items: center; 
+            justify-content: center;
+            align-items: center;
             opacity: 0;
             transition: opacity 0.2s ease-in-out;
          }
-         .modal-overlay.active { 
+         .modal-overlay.active {
              display: flex; /* Muestra */
-             opacity: 1; 
+             opacity: 1;
          }
-         .modal-content { 
-             background-color: var(--surface); 
-             padding: 20px; 
-             border-radius: 12px; 
-             width: 90%; 
-             max-width: 500px; 
+         .modal-content {
+             background-color: var(--surface);
+             padding: 20px;
+             border-radius: 12px;
+             width: 90%;
+             max-width: 500px;
              box-shadow: 0 10px 30px rgba(0,0,0,0.2);
          }
-         .modal-header { 
-             display: flex; align-items: center; padding: 15px 20px; 
-             background-color: var(--surface); border-bottom: 1px solid var(--border-color); 
+         .modal-header {
+             display: flex; align-items: center; padding: 15px 20px;
+             background-color: var(--surface); border-bottom: 1px solid var(--border-color);
              flex-shrink: 0; position: sticky; top: 0; z-index: 1; /* Para que quede arriba al hacer scroll */
          }
          .modal-header button { background: none; border: none; color: var(--text-primary); cursor: pointer; margin-right: 15px; }
          .modal-title { font-size: 1.2em; font-weight: 600; }
          .modal-content-wrapper { flex-grow: 1; overflow-y: auto; padding: 20px; }
-         .action-buttons { 
-             background-color: var(--surface); border-top: 1px solid var(--border-color); 
-             padding: 15px 20px; display: flex; gap: 10px; margin-top: auto; 
-             position: sticky; bottom: 0; flex-shrink: 0; 
+         .action-buttons {
+             background-color: var(--surface); border-top: 1px solid var(--border-color);
+             padding: 15px 20px; display: flex; gap: 10px; margin-top: auto;
+             position: sticky; bottom: 0; flex-shrink: 0;
          }
          .action-buttons button { flex-grow: 1; padding: 15px; font-size: 1em; font-weight: 600; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
          .action-buttons button:disabled { background-color: var(--text-secondary); cursor: not-allowed; opacity: 0.7; }
@@ -187,30 +187,65 @@
         /* Estilos específicos del formulario de empresa */
         #companyFormModal .form-group { margin-bottom: 18px; }
         #companyFormModal .form-group label { margin-bottom: 6px; font-size: 0.9em; }
-        #companyFormModal .form-group input, 
-        #companyFormModal .form-group select, 
-        #companyFormModal .form-group textarea { 
-            width: 100%; 
-            padding: 12px; 
-            font-size: 1em; 
-            border-radius: 8px; 
-            border: 1px solid var(--border-color); 
-            background-color: var(--surface); 
-            color: var(--text-primary); 
+        #companyFormModal .form-group input,
+        #companyFormModal .form-group select,
+        #companyFormModal .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            font-size: 1em;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background-color: var(--surface);
+            color: var(--text-primary);
         }
         #companyFormModal .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         #companyFormModal .toggle-switch { /* ... estilos toggle ... */ }
         #companyFormModal .section-title { margin-top: 25px; margin-bottom: 15px; padding-bottom: 8px; font-size: 1.1em; }
 
+        /* --- NUEVO: Estilos para Tabs (Demo/Pro) --- */
+        .plan-type-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+        .plan-type-selector input[type="radio"] {
+            display: none;
+        }
+        .plan-type-selector label {
+            display: block;
+            padding: 15px;
+            border: 2px solid var(--border-color);
+            background-color: var(--surface);
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        .plan-type-selector label:hover {
+            border-color: var(--accent-blue);
+        }
+        .plan-type-selector input[type="radio"]:checked + label {
+            background-color: var(--accent-blue);
+            border-color: var(--accent-blue);
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+        }
+        .plan-fields-container {
+            display: none; /* Oculto por defecto */
+        }
+        /* --- Fin Estilos Tabs --- */
+
         /* Estilos para lista de empresas */
-        #companies-list .company-card { 
-             background-color: var(--surface); padding: 15px 20px; border-radius: 12px; 
-             margin-bottom: 12px; border: 1px solid var(--border-color); 
+        #companies-list .company-card {
+             background-color: var(--surface); padding: 15px 20px; border-radius: 12px;
+             margin-bottom: 12px; border: 1px solid var(--border-color);
              display: flex; justify-content: space-between; align-items: center;
              cursor: pointer; transition: box-shadow 0.2s, transform 0.2s;
         }
-        #companies-list .company-card:hover { 
-             transform: translateY(-2px); 
+        #companies-list .company-card:hover {
+             transform: translateY(-2px);
              box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1); /* Sombra azulada en modo oscuro */
         }
         #companies-list .company-card h4 { margin: 0 0 4px; font-size: 1.1em; }
@@ -290,6 +325,29 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
         let functions; // Inicialización retrasada
+
+        // --- (NUEVO) Configuración de Monedas para América ---
+        const CURRENCY_CONFIGS = {
+            "USD": { name: "Dólar Americano", symbol: "$", country: "EE.UU." },
+            "CAD": { name: "Dólar Canadiense", symbol: "C$", country: "Canadá" },
+            "MXN": { name: "Peso Mexicano", symbol: "MXN$", country: "México" },
+            "GTQ": { name: "Quetzal Guatemalteco", symbol: "Q", country: "Guatemala" },
+            "HNL": { name: "Lempira Hondureña", symbol: "L", country: "Honduras" },
+            "NIO": { name: "Córdoba Nicaragüense", symbol: "C$", country: "Nicaragua" },
+            "CRC": { name: "Colón Costarricense", symbol: "₡", country: "Costa Rica" },
+            "PAB": { name: "Balboa Panameño", symbol: "B/.", country: "Panamá" },
+            "DOP": { name: "Peso Dominicano", symbol: "RD$", country: "Rep. Dominicana" },
+            "COP": { name: "Peso Colombiano", symbol: "COP$", country: "Colombia" },
+            "VES": { name: "Bolívar Soberano", symbol: "Bs.", country: "Venezuela" },
+            "PEN": { name: "Sol Peruano", symbol: "S/", country: "Perú" },
+            "BOB": { name: "Boliviano", symbol: "Bs.", country: "Bolivia" },
+            "CLP": { name: "Peso Chileno", symbol: "CLP$", country: "Chile" },
+            "PYG": { name: "Guaraní Paraguayo", symbol: "₲", country: "Paraguay" },
+            "ARS": { name: "Peso Argentino", symbol: "ARS$", country: "Argentina" },
+            "UYU": { name: "Peso Uruguayo", symbol: "$U", country: "Uruguay" },
+            "BRL": { name: "Real Brasileiro", symbol: "R$", country: "Brasil" }
+            // Puedes añadir más si es necesario
+        };
 
         // --- Variables Globales ---
         let allCompanies = [];
@@ -379,7 +437,8 @@
                 <div class="company-card" data-company-id="${company.id}">
                     <div>
                         <h4>${company.name || 'Nombre no definido'}</h4>
-                        <p>Plan: ${company.plan?.text || company.plan?.duration || 'N/A'} - Valor: ${company.plan?.value || 'N/A'}</p> 
+                        <!-- Lógica de renderizado de plan actualizada -->
+                        <p>${renderPlanInfo(company.plan)}</p>
                     </div>
                     <div>
                         <button class="header-btn" data-action="edit" title="Editar Empresa"><i data-lucide="edit"></i></button>
@@ -408,26 +467,71 @@
             lucide.createIcons({ nodes: listContainer.querySelectorAll('[data-lucide]') });
         }
 
+        // --- NUEVO: Helper para mostrar info del plan ---
+        function renderPlanInfo(plan) {
+            if (!plan) return 'Plan: N/A';
+
+            let collectorLimitText = 'Limite: N/A';
+            if (plan.collectorLimit) {
+                collectorLimitText = plan.collectorLimit === -1 ? 'Cobradores Ilimitados' : `Limite: ${plan.collectorLimit} cobrador(es)`;
+            }
+
+            if (plan.type === 'demo') {
+                return `Plan: DEMO (${plan.duration || 'N/A'}) - ${collectorLimitText}`;
+            }
+            if (plan.type === 'pro') {
+                const planValue = plan.value ? `(${plan.value} ${plan.currency || ''})` : '';
+                return `Plan: PRO (${plan.plan || 'N/A'} ${planValue}) - ${collectorLimitText}`;
+            }
+            // Fallback para el formato antiguo
+            return `Plan: ${plan.text || plan.duration || 'N/A'} - Valor: ${plan.value || 'N/A'}`;
+        }
+        // --- FIN Helper ---
+
         function showCompanyFormModal(companyId = null) {
             const isEditMode = companyId !== null;
             const companyData = isEditMode ? allCompanies.find(c => c.id === companyId) : {}; // Obtiene datos si edita
-            // En modo edición, no podemos editar el admin inicial aquí, solo datos de la empresa/plan
-            
+
             const modal = document.getElementById('companyFormModal');
             if (!modal) return;
 
             const modalTitle = isEditMode ? 'Editar Empresa' : 'Registrar Nova Empresa Financeira';
             const saveButtonText = isEditMode ? 'Salvar Alterações' : 'Criar Empresa e Admin';
 
-            // Opciones de planes
-            const planOptions = [
-                { value: '1m', text: '1 Mês' },
-                { value: '3m', text: '3 Meses' },
-                { value: '6m', text: '6 Meses' },
-                { value: '1y', text: '1 Ano' },
-                { value: '3y', text: '3 Anos' }
+            // --- Opciones para los nuevos selects ---
+            const demoDurationOptions = [
+                { value: '1d', text: '1 Dia' },
+                { value: '2d', text: '2 Dias' },
+                { value: '3d', text: '3 Dias' },
+                { value: '5d', text: '5 Dias' },
+                { value: '7d', text: '7 Dias' },
+                { value: '15d', text: '15 Dias' }
             ];
 
+            const proPlanOptions = [
+                { value: '1m', text: 'Mensal' },
+                { value: '3m', text: 'Trimestral' },
+                { value: '6m', text: 'Semestral' },
+                { value: '1y', text: 'Anual' }
+            ];
+
+            const collectorLimitOptions = [
+                { value: '1', text: '1 Cobrador' },
+                { value: '3', text: '3 Cobradores' },
+                { value: '5', text: '5 Cobradores' },
+                { value: 'custom', text: 'Personalizado' },
+                // { value: '-1', text: 'Ilimitado' } // Opción ilimitada (añadida si se necesita)
+            ];
+
+            const currencyOptions = Object.entries(CURRENCY_CONFIGS).map(([code, config]) => {
+                // Selecciona BRL por defecto si no hay nada, o la moneda guardada
+                const selected = (companyData.settings?.currency || 'BRL') === code ? 'selected' : '';
+                return `<option value="${code}" ${selected}>${config.country} (${config.symbol} ${code})</option>`;
+            }).sort((a, b) => a.localeCompare(b)).join(''); // Ordena alfabéticamente por país
+            // --- Fin Opciones ---
+
+
+            // --- HTML del Modal RECONSTRUIDO ---
             modal.innerHTML = `
                 <header class="modal-header">
                     <button id="closeCompanyFormModal"><i data-lucide="arrow-left"></i></button>
@@ -436,58 +540,88 @@
                 <div class="modal-content-wrapper container">
                     <form id="company-form">
 
+                        <!-- Paso 1: Datos de la Empresa (Común) -->
                         <h3 class="section-title" style="margin-top: 10px; font-size: 1.1em;">Dados da Empresa</h3>
-                        
                         <div class="form-group">
                             <label for="company-name">Nome da Empresa Financeira</label>
                             <input type="text" id="company-name" required value="${companyData.name || ''}">
                         </div>
-
-                        <!-- Configurações Iniciais Opcionais -->
                         <div class="form-group grid-2">
-                            <div>
+                             <div>
                                 <label for="company-default-interest">Juros Padrão (%)</label>
-                                <input type="number" id="company-default-interest" step="0.1" value="${companyData.settings?.defaultInterest || '20'}">
+                                <input type="number" id="company-default-interest" step="0.1" value="${companyData.settings?.defaultInterest || '20'}" ${isEditMode ? 'readonly' : ''}> <!-- No editable en modo edición por ahora -->
                             </div>
                             <div>
                                 <label for="company-currency">Moeda Principal</label>
-                                <select id="company-currency">
-                                     <!-- Aquí podrías poblar con tus CURRENCY_CONFIGS si las traes a esta app -->
-                                     <option value="BRL" ${ (companyData.settings?.currency || 'BRL') === 'BRL' ? 'selected' : '' }>BRL (Real)</option>
-                                     <option value="COP" ${ (companyData.settings?.currency || 'BRL') === 'COP' ? 'selected' : '' }>COP (Peso Col.)</option>
-                                     <option value="USD" ${ (companyData.settings?.currency || 'BRL') === 'USD' ? 'selected' : '' }>USD (Dólar)</option>
-                                     <!-- Añade más monedas si es necesario -->
+                                <select id="company-currency" ${isEditMode ? 'disabled' : ''}> <!-- No editable en modo edición por ahora -->
+                                     ${currencyOptions}
                                 </select>
                             </div>
                         </div>
-                        <div class="form-group" style="display: none;"> <!-- Ocultamos el toggle por ahora -->
-                             <label class="toggle-switch" style="justify-content: flex-start; gap: 10px;">
-                                <input type="checkbox" id="company-require-gps" ${companyData.settings?.requireGps ? 'checked' : ''}>
-                                <span class="slider"></span>
-                                <span>Exigir GPS dos Cobradores</span>
-                             </label>
+
+                        <!-- Paso 2: Tipo de Cuenta (Solo en Creación) -->
+                        ${!isEditMode ? `
+                        <h3 class="section-title" style="margin-top: 30px; font-size: 1.1em;">Tipo de Conta</h3>
+                        <div class="plan-type-selector">
+                            <input type="radio" id="plan-type-demo" name="plan-type" value="demo" checked>
+                            <label for="plan-type-demo"><i data-lucide="play-circle"></i> Versão DEMO</label>
+
+                            <input type="radio" id="plan-type-pro" name="plan-type" value="pro">
+                            <label for="plan-type-pro"><i data-lucide="award"></i> Versão PRO</label>
                         </div>
 
-
-                        <h3 class="section-title" style="margin-top: 30px; font-size: 1.1em;">Plano e Pagamento</h3>
-
-                        <div class="form-group grid-2">
-                            <div>
-                                <label for="company-plan-duration">Duração do Plano</label>
-                                <select id="company-plan-duration">
-                                    ${planOptions.map(opt => `<option value="${opt.value}" ${companyData.plan?.duration === opt.value ? 'selected' : ''}>${opt.text}</option>`).join('')}
+                        <!-- Campos para DEMO -->
+                        <div id="demo-form-fields" class="plan-fields-container">
+                            <h3 class="section-title" style="margin-top: 30px; font-size: 1.1em;">Configurar DEMO</h3>
+                            <div class="form-group">
+                                <label for="demo-duration">Duração do Demo</label>
+                                <select id="demo-duration">
+                                    ${demoDurationOptions.map(opt => `<option value="${opt.value}">${opt.text}</option>`).join('')}
                                 </select>
                             </div>
-                            <div>
-                                <label for="company-plan-value">Valor (Mensalidade/Período)</label>
-                                <input type="number" id="company-plan-value" step="0.01" required value="${companyData.plan?.value || ''}" placeholder="Ex: 150.00">
+                            <div class="form-group">
+                                <label for="demo-collector-limit">Limite de Cobradores</label>
+                                <select id="demo-collector-limit" class="collector-limit-select">
+                                    ${collectorLimitOptions.map(opt => `<option value="${opt.value}">${opt.text}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="form-group" id="demo-custom-limit-group" style="display: none;">
+                                <label for="demo-custom-collector-limit">Número Exato de Cobradores</label>
+                                <input type="number" id="demo-custom-collector-limit" placeholder="Ex: 10">
                             </div>
                         </div>
 
-                        <!-- Solo mostramos campos de Admin al CREAR -->
+                        <!-- Campos para PRO -->
+                        <div id="pro-form-fields" class="plan-fields-container">
+                            <h3 class="section-title" style="margin-top: 30px; font-size: 1.1em;">Configurar PRO</h3>
+                            <div class="form-group grid-2">
+                                <div>
+                                    <label for="pro-plan-type">Plano</label>
+                                    <select id="pro-plan-type">
+                                        ${proPlanOptions.map(opt => `<option value="${opt.value}">${opt.text}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="pro-plan-value">Valor do Plano</label>
+                                    <input type="number" id="pro-plan-value" step="0.01" placeholder="Ex: 150.00">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="pro-collector-limit">Limite de Cobradores</label>
+                                <select id="pro-collector-limit" class="collector-limit-select">
+                                    ${collectorLimitOptions.map(opt => `<option value="${opt.value}">${opt.text}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="form-group" id="pro-custom-limit-group" style="display: none;">
+                                <label for="pro-custom-collector-limit">Número Exato de Cobradores</label>
+                                <input type="number" id="pro-custom-collector-limit" placeholder="Ex: 10">
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        <!-- Campos de Admin (Solo en Creación) -->
                         ${!isEditMode ? `
                         <h3 class="section-title" style="margin-top: 30px; font-size: 1.1em;">Dados do Administrador Principal</h3>
-
                         <div class="form-group">
                             <label for="admin-email">Email do Admin</label>
                             <input type="email" id="admin-email" required autocomplete="off">
@@ -495,7 +629,17 @@
                         <div class="form-group">
                             <label for="admin-password">Senha Temporária do Admin</label>
                             <input type="password" id="admin-password" required autocomplete="new-password">
-                            <p style="font-size: 0.8em; color: var(--text-secondary); margin-top: 5px;">Mínimo 6 caracteres. O admin deverá alterá-la no primeiro acesso.</p>
+                            <p style="font-size: 0.8em; color: var(--text-secondary); margin-top: 5px;">Mínimo 6 caracteres.</p>
+                        </div>
+                        ` : ''}
+
+                        <!-- Campos de Edición (Solo en Edición) -->
+                        ${isEditMode ? `
+                        <h3 class="section-title" style="margin-top: 30px; font-size: 1.1em;">Plano e Pagamento (Edição)</h3>
+                        <p style="color: var(--text-secondary); font-size: 0.9em; margin-top: -15px; margin-bottom: 20px;">La edición detallada del plan (tipo, límites) se hará en un panel futuro. Por ahora, puedes editar el nombre y el valor.</p>
+                        <div class="form-group">
+                            <label>Valor Atual do Plano</label>
+                            <input type="number" id="edit-plan-value" step="0.01" value="${companyData.plan?.value || '0'}">
                         </div>
                         ` : ''}
 
@@ -505,42 +649,77 @@
                     <button id="saveCompanyBtn" class="btn-primary"><i data-lucide="save"></i> ${saveButtonText}</button>
                 </div>
             `;
+            // --- FIN HTML RECONSTRUIDO ---
 
-            // Añade estado al historial y muestra el modal
-            // history.pushState({ modal: 'companyFormModal' }, modalTitle, '#company-form'); // Temporarily commented out
             modal.classList.add('active');
             lucide.createIcons({ nodes: modal.querySelectorAll('[data-lucide]') });
 
             // --- Event Listeners del Modal ---
             modal.querySelector('#closeCompanyFormModal').addEventListener('click', () => window.history.back());
+
+            // --- NUEVOS Listeners para Lógica de Formulario ---
+            if (!isEditMode) {
+                const demoFields = modal.querySelector('#demo-form-fields');
+                const proFields = modal.querySelector('#pro-form-fields');
+
+                // Mostrar campos Demo por defecto
+                demoFields.style.display = 'block';
+
+                // Listener para tabs DEMO/PRO
+                modal.querySelectorAll('input[name="plan-type"]').forEach(radio => {
+                    radio.addEventListener('change', (e) => {
+                        if (e.target.value === 'demo') {
+                            demoFields.style.display = 'block';
+                            proFields.style.display = 'none';
+                        } else {
+                            demoFields.style.display = 'none';
+                            proFields.style.display = 'block';
+                        }
+                    });
+                });
+
+                // Listener para Límite de Cobradores (para ambos forms)
+                modal.querySelectorAll('.collector-limit-select').forEach(select => {
+                    select.addEventListener('change', (e) => {
+                        const isDemo = e.target.id === 'demo-collector-limit';
+                        const customGroup = modal.querySelector(isDemo ? '#demo-custom-limit-group' : '#pro-custom-limit-group');
+                        const customInput = modal.querySelector(isDemo ? '#demo-custom-collector-limit' : '#pro-custom-collector-limit');
+                        if (e.target.value === 'custom') {
+                            customGroup.style.display = 'block';
+                            customInput.required = true; // Hace requerido el campo personalizado
+                        } else {
+                            customGroup.style.display = 'none';
+                            customInput.required = false; // No es requerido si no es custom
+                            customInput.value = ''; // Limpia el valor si se cambia
+                        }
+                    });
+                });
+            }
+            // --- FIN NUEVOS Listeners ---
+
+
+            // --- Listener de Guardado (ACTUALIZADO) ---
             modal.querySelector('#saveCompanyBtn').addEventListener('click', async (e) => {
                 const saveButton = e.currentTarget;
                 const originalButtonHTML = saveButton.innerHTML;
 
-                // 1. Recolectar datos del formulario
+                // 1. Recolectar datos COMUNES
                 const companyName = document.getElementById('company-name').value.trim();
                 const defaultInterest = parseFloat(document.getElementById('company-default-interest').value) || 20;
                 const currency = document.getElementById('company-currency').value || 'BRL';
-                const requireGps = document.getElementById('company-require-gps').checked; // Aunque oculto, lo leemos
-                const planDurationSelect = document.getElementById('company-plan-duration');
-                const planDuration = planDurationSelect.value;
-                const planDurationText = planDurationSelect.options[planDurationSelect.selectedIndex].text; // Guardamos el texto también
-                const planValueInput = document.getElementById('company-plan-value');
-                const planValue = parseFloat(planValueInput.value);
-                
-                const adminEmailInput = document.getElementById('admin-email'); // Puede ser null si isEditMode
-                const adminPasswordInput = document.getElementById('admin-password'); // Puede ser null si isEditMode
+                const requireGps = false; // Hardcoded por ahora
+
+                const adminEmailInput = document.getElementById('admin-email');
+                const adminPasswordInput = document.getElementById('admin-password');
                 const adminEmail = adminEmailInput ? adminEmailInput.value.trim() : null;
                 const adminPassword = adminPasswordInput ? adminPasswordInput.value : null;
 
                 // Validaciones básicas
-                if (!companyName || isNaN(planValue) || planValue <= 0) {
-                    showToast('Nome da empresa e valor do plano são obrigatórios.', true);
-                    return;
+                if (!companyName) {
+                    showToast('O nome da empresa é obrigatório.', true); return;
                 }
                 if (!isEditMode && (!adminEmail || !adminPassword || adminPassword.length < 6)) {
-                    showToast('Email e senha (mín. 6 caracteres) para o admin são obrigatórios.', true);
-                    return;
+                    showToast('Email e senha (mín. 6 caracteres) para o admin são obrigatórios.', true); return;
                 }
 
                 // Deshabilita botón y muestra carga
@@ -548,119 +727,153 @@
                 saveButton.innerHTML = `<i data-lucide="loader-circle" style="animation: spin 1s linear infinite;"></i> ${isEditMode ? 'Salvando...' : 'Criando...'}`;
                 lucide.createIcons({ nodes: [saveButton.querySelector('i')] });
 
-                // 2. Preparar datos para Firestore y Cloud Function
+                // 2. Preparar datos
                 const companySettings = { defaultInterest, currency, requireGps };
-                const companyPlan = { duration: planDuration, text: planDurationText, value: planValue }; // startDate se añadirá en el servidor
-                
-                const companyBaseData = {
-                    name: companyName,
-                    settings: companySettings,
-                    plan: companyPlan,
-                    // adminUserIds se llenará/actualizará desde la Cloud Function
-                    // createdAt se añadirá desde la Cloud Function al crear
-                };
+                let companyPlan = {}; // Objeto de plan vacío
 
                 try {
                     if (isEditMode) {
-                        // --- Lógica de Edición (Directo a Firestore) ---
-                        console.log("Modo Edição - Atualizando dados da empresa em Firestore...");
-                        const companyRef = doc(db, 'companies', companyId);
-                        // Solo actualizamos los campos modificables
-                        await updateDoc(companyRef, {
-                             name: companyBaseData.name,
-                             settings: companyBaseData.settings,
-                             plan: companyBaseData.plan // Actualizamos el plan completo
+                        // --- Lógica de Edición ---
+                        // Solo actualiza el nombre y el valor del plan por ahora
+                        const newPlanValue = parseFloat(document.getElementById('edit-plan-value').value);
+                        if (isNaN(newPlanValue) || newPlanValue < 0) {
+                             showToast('Valor do plano inválido.', true);
+                             saveButton.disabled = false; saveButton.innerHTML = originalButtonHTML; return;
+                        }
+                        // Mantiene plan existente, actualiza valor
+                        companyPlan = { ...companyData.plan, value: newPlanValue };
+
+                        console.log("Modo Edição - Atualizando dados...");
+                        await updateDoc(doc(db, 'companies', companyId), {
+                             name: companyName,
+                             plan: companyPlan // Solo actualizamos nombre y plan (que contiene el valor)
+                             // Settings no se actualizan en edición por ahora
                         });
                         showToast('Empresa atualizada com sucesso!');
-                        window.history.back(); // Cierra el modal
+                        window.history.back();
 
                     } else {
-                        // --- Lógica de Creación (Llamada a Cloud Function) ---
+                        // --- Lógica de Creación (NUEVA LÓGICA DE PLAN) ---
+                        const accountType = modal.querySelector('input[name="plan-type"]:checked').value;
+                        let collectorLimit = 0; // Inicializa
+                        let collectorLimitType = ''; // Inicializa
+
+                        if (accountType === 'demo') {
+                            const duration = modal.querySelector('#demo-duration').value;
+                            const limitSelect = modal.querySelector('#demo-collector-limit');
+                            collectorLimitType = limitSelect.value;
+
+                            if (collectorLimitType === 'custom') {
+                                collectorLimit = parseInt(modal.querySelector('#demo-custom-collector-limit').value);
+                                if (isNaN(collectorLimit) || collectorLimit <= 0) {
+                                     showToast('Número de cobradores personalizado inválido.', true);
+                                     saveButton.disabled = false; saveButton.innerHTML = originalButtonHTML; return;
+                                }
+                            } else {
+                                collectorLimit = parseInt(collectorLimitType);
+                            }
+
+                            companyPlan = {
+                                type: 'demo',
+                                duration: duration, // Guarda '1d', '2d', etc.
+                                text: `Demo (${modal.querySelector('#demo-duration option:checked').text})`,
+                                collectorLimit: collectorLimit,
+                                collectorLimitType: collectorLimitType, // Guarda '1', '3', '5' o 'custom'
+                                value: 0, // Demos no tienen valor
+                                currency: currency
+                            };
+
+                        } else if (accountType === 'pro') {
+                            const planType = modal.querySelector('#pro-plan-type').value;
+                            const planText = modal.querySelector('#pro-plan-type option:checked').text;
+                            const planValueInput = modal.querySelector('#pro-plan-value');
+                            const planValue = parseFloat(planValueInput.value);
+                            const limitSelect = modal.querySelector('#pro-collector-limit');
+                            collectorLimitType = limitSelect.value;
+
+                            if (isNaN(planValue) || planValue < 0) { // Permitimos valor 0
+                                showToast('Valor do plano inválido.', true);
+                                saveButton.disabled = false; saveButton.innerHTML = originalButtonHTML; return;
+                            }
+
+                            if (collectorLimitType === 'custom') {
+                                collectorLimit = parseInt(modal.querySelector('#pro-custom-collector-limit').value);
+                                if (isNaN(collectorLimit) || collectorLimit <= 0) {
+                                     showToast('Número de cobradores personalizado inválido.', true);
+                                     saveButton.disabled = false; saveButton.innerHTML = originalButtonHTML; return;
+                                }
+                            } else {
+                                collectorLimit = parseInt(collectorLimitType);
+                            }
+
+                            companyPlan = {
+                                type: 'pro',
+                                plan: planType, // Guarda '1m', '3m', etc.
+                                text: `PRO (${planText})`,
+                                collectorLimit: collectorLimit,
+                                collectorLimitType: collectorLimitType, // Guarda '1', '3', '5' o 'custom'
+                                value: planValue,
+                                currency: currency
+                            };
+                        }
+
+                        // Validar que se haya seleccionado un plan
+                        if (!companyPlan.type) {
+                            throw new Error('Erro ao processar o tipo de plano.');
+                        }
+
+                        // --- FIN LÓGICA NUEVA DE PLAN ---
+
+                        const companyBaseData = {
+                            name: companyName,
+                            settings: companySettings,
+                            plan: companyPlan // Envía el objeto de plan estructurado
+                        };
+
+                        // --- Llamada a Cloud Function (sin cambios en la llamada, solo en 'dataToSend') ---
                         console.log("Modo Criação - Chamando Cloud Function...");
-
-                        // --- Llamada Real a la Cloud Function (Modificada) ---
                         try {
-                            // --- VERIFICACIÓN AÑADIDA ---
-                            if (!auth.currentUser) {
-                                console.error("ERROR: auth.currentUser es null ANTES de llamar la función. Refrescando...");
-                                showToast("Erro de autenticação. Por favor, tente novamente.", true);
-                                window.location.reload(); 
-                                return; // Detiene la ejecución
-                            }
-                            console.log("VERIFICACIÓN: auth.currentUser OK ANTES de llamar:", auth.currentUser.uid);
-                            // --- FIN VERIFICACIÓN ---
-                            
-                            // Forzar obtención/refresco del token ID
-                            console.log("Forzando obtención/refresco del token ID...");
-                            const idToken = await auth.currentUser.getIdToken(true); // true fuerza el refresco
-                            console.log("Token ID obtenido/refrescado."); // No mostramos el token por seguridad
+                            if (!auth.currentUser) throw new Error("Usuário Super Admin não autenticado.");
 
+                            console.log("Forçando obtención/refresco del token ID...");
+                            const idToken = await auth.currentUser.getIdToken(true);
+                            console.log("Token ID obtenido/refrescado.");
 
-                            console.log("Chamando Cloud Function 'createCompanyAndAdmin' via fetch (manual auth)...");
-                            
-                            if (!functions) {
-                                // INICIALIZACIÓN DE FUNCTIONS MOVIDA AQUÍ (solo si es necesario)
-                                // Esto puede causar un error si se llama 'getFunctions' después de la carga inicial
-                                // La inicialización retrasada 'let functions;' de la línea 268 no es ideal.
-                                // Vamos a inicializarlo en el AuthStateChange.
-                                console.log("Inicializando SDK de Functions (tarde)...");
-                                functions = getFunctions(app); // Intenta inicializar
-                            }
-                            
-                            // Usamos la URL de la función que conocemos por los logs
                             const functionUrl = "https://us-central1-lumix-financas-app.cloudfunctions.net/createCompanyAndAdmin";
-                            
-                            // Crea un objeto NUEVO y LIMPIO para enviar
+
                             const dataToSend = {
-                                companyData: { 
-                                    name: companyBaseData.name,
-                                    settings: { ...companyBaseData.settings }, 
-                                    plan: { ...companyBaseData.plan }          
-                                },
+                                companyData: companyBaseData, // Envía el nuevo objeto con plan detallado
                                 adminEmail: adminEmail,
                                 adminPassword: adminPassword
                             };
-                            
-                            console.log("Datos a enviar (limpios):", JSON.stringify(dataToSend)); // Log para verificar
 
-                            // --- NUEVA LLAMADA con FETCH (reemplaza httpsCallable) ---
-                            // httpsCallable envuelve los datos en un objeto { data: ... }
-                            // La función onRequest esperará ese mismo formato.
+                            console.log("Datos a enviar (limpios):", JSON.stringify(dataToSend));
+
                             const response = await fetch(functionUrl, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
-                                    'Authorization': `Bearer ${idToken}` // ¡Enviamos el token manualmente!
+                                    'Authorization': `Bearer ${idToken}`
                                 },
-                                body: JSON.stringify({ data: dataToSend }) // Mantenemos el formato de onCall
+                                body: JSON.stringify({ data: dataToSend })
                             });
 
                             if (!response.ok) {
-                                // Error de red o HTTP (4xx, 5xx)
-                                const errorData = await response.json().catch(() => ({})); // Intenta parsear error
+                                const errorData = await response.json().catch(() => ({}));
                                 const errorMessage = errorData.error?.message || `Error HTTP ${response.status}: ${response.statusText}`;
                                 throw new Error(errorMessage);
                             }
 
-                            // La respuesta de una función onRequest compatible con onCall
-                            // estará envuelta en un objeto { result: ... }
-                            const resultWrapper = await response.json(); 
-                            
-                            // Verificamos si la respuesta es un error de la función
-                            if (resultWrapper.error) {
-                                throw new Error(resultWrapper.error.message || 'Error desconocido en la función');
-                            }
-                            
-                            const result = resultWrapper.result; // Sacamos el resultado real
+                            const resultWrapper = await response.json();
+                            if (resultWrapper.error) throw new Error(resultWrapper.error.message);
 
+                            const result = resultWrapper.result;
                             console.log("Resultado da Cloud Function:", result);
 
-                            // Verifica la respuesta de la función (la lógica aquí es 'result' no 'result.data')
                             if (result.success) {
-                                showToast(`Empresa "${companyName}" e Admin criados com sucesso! ID: ${result.companyId}`);
-                                window.history.back(); // Cierra el modal
+                                showToast(`Empresa "${companyName}" e Admin criados com sucesso!`);
+                                window.history.back();
                             } else {
-                                // Si la función devolvió success: false o un error específico
                                 throw new Error(result.error || 'Erro desconhecido retornado pela Cloud Function.');
                             }
 
@@ -670,30 +883,34 @@
                             // Log completo para depuración
                             console.log("Detalles completos del Error:", functionError);
                         } finally {
-                            // Reactiva el botón
-                            saveButton.disabled = false;
-                            saveButton.innerHTML = originalButtonHTML;
-                            lucide.createIcons({ nodes: [saveButton.querySelector('i')] });
+                             // Reactiva el botón SOLO SI HUBO ERROR en la función
+                             if (!saveButton.disabled) { // Si no se desactivó por error de validación
+                                saveButton.disabled = false;
+                                saveButton.innerHTML = originalButtonHTML;
+                                if (document.body.contains(saveButton)) {
+                                    lucide.createIcons({ nodes: [saveButton.querySelector('i')] });
+                                }
+                             }
                         }
                     }
-
                 } catch (generalError) {
                     console.error("Error general en saveCompanyBtn:", generalError);
                     showToast(`Error: ${generalError.message}`, true);
-                    // Reactiva el botón
                     saveButton.disabled = false;
                     saveButton.innerHTML = originalButtonHTML;
-                    lucide.createIcons({ nodes: [saveButton.querySelector('i')] });
+                    if (document.body.contains(saveButton)) {
+                         lucide.createIcons({ nodes: [saveButton.querySelector('i')] });
+                    }
                 }
-            });
+            }); // Fin listener de guardado
 
-            // Listener para cerrar el modal si se usa el botón "Atrás" del navegador
+            // Listener popstate (sin cambios)
             window.addEventListener('popstate', (event) => {
                  if (modal.classList.contains('active')) {
                      modal.classList.remove('active');
                  }
-            }, { once: true }); // Solo escucha una vez por si acaso
-        }
+            }, { once: true });
+        } // Fin showCompanyFormModal
 
         // --- Event Listeners Globales ---
         function setupSuperAdminEventListeners() {
@@ -731,10 +948,10 @@
             // else toast.classList.add('toast-success'); // Opcional para éxito
             toast.textContent = message;
             container.appendChild(toast);
-            
+
             // Forzar reflow para activar la animación de entrada
-            void toast.offsetWidth; 
-            
+            void toast.offsetWidth;
+
             toast.classList.add('show');
 
             // Ocultar después de 3 segundos
@@ -756,14 +973,12 @@
                 if (user) {
                     console.log("AuthStateChanged: Usuario autenticado:", user.uid);
                     // --- INICIALIZACIÓN DE FUNCTIONS ---
-                    // Inicializa Functions aquí, solo cuando el usuario está logueado
-                    // y sabemos que podríamos necesitarlo.
                     if (!functions) {
                         console.log("Inicializando SDK de Functions...");
                         functions = getFunctions(app); // Inicializa la variable global 'functions'
                     }
                     // --- FIN INICIALIZACIÓN ---
-                    
+
                     // TODO: Añadir verificación de Custom Claim de Super Admin
                     // por ahora, si está logueado, mostramos la app.
                     showSuperAdminApp(user);
@@ -773,22 +988,6 @@
                 }
             });
 
-            // Reemplazo para 'popstate' que no funciona bien en todos los iframes
-            // Detecta 'history.back()' llamado desde el modal
-            let lastPath = window.location.hash;
-             window.addEventListener('hashchange', () => {
-                if (window.location.hash === '') {
-                    const modal = document.getElementById('companyFormModal');
-                     if (modal && modal.classList.contains('active')) {
-                         modal.classList.remove('active');
-                     }
-                }
-                 lastPath = window.location.hash;
-             });
-             // Modifica 'showCompanyFormModal' para usar hashes
-             // ... (Modificación necesaria en 'showCompanyFormModal' y 'close')
-             // (Por ahora, lo dejamos como estaba, el 'popstate' es problemático)
-             
              // Solución simple para 'popstate' (reemplazando el 'popstate' anterior)
              window.onpopstate = function(event) {
                 // Cerramos CUALQUIER modal de vista completa
@@ -797,8 +996,6 @@
                      activeModal.classList.remove('active');
                  }
              };
-             // Y modificamos el botón de cierre del modal para que use history.back()
-             // Esto ya está hecho en 'showCompanyFormModal' (línea 467)
         }
 
         // --- Punto de Entrada ---
@@ -809,3 +1006,4 @@
     </script>
 </body>
 </html>
+
