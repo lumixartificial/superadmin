@@ -16,6 +16,7 @@
             --accent-blue: #3b82f6;
             --accent-blue-darker: #2563eb;
             --danger-light: #ef4444;
+            --warning-light: #f97316;
 
             --bg-dark: #020617;
             --surface-dark: #0f172a;
@@ -23,6 +24,7 @@
             --text-secondary-dark: #94a3b8;
             --border-dark: #1e293b;
             --danger-dark: #f87171;
+            --warning-dark: #fb923c;
         }
 
         /* Dark mode por defecto */
@@ -33,6 +35,7 @@
             --text-secondary: var(--text-secondary-dark);
             --border-color: var(--border-dark);
             --danger-color: var(--danger-dark);
+            --warning-color: var(--warning-dark);
         }
 
         /* Estilos Light mode (si se implementa toggle) */
@@ -550,8 +553,14 @@
                 const planEndDateTimestamp = company.planEndDate; // Timestamp de Firestore
                 const planEndDate = planEndDateTimestamp?.seconds ? new Date(planEndDateTimestamp.seconds * 1000) : null;
 
-                if (planEndDate) {
-                    planEndDate.setHours(0, 0, 0, 0); // Ignora la hora
+                if (company.status === 'suspended') {
+                statusKey = 'Suspensa';
+                statusClass = 'status-due'; // Rojo
+                statusIcon = 'pause-circle';
+                } 
+                // --- FIN NUEVO ---
+                else if (planEndDate) { // <-- AÑADIR 'else' AQUÍ
+                planEndDate.setHours(0, 0, 0, 0);
 
                     // Calcula la diferencia en días
                     const diffTime = planEndDate - today;
@@ -1087,23 +1096,10 @@
 
                         // 1. RE-CALCULAR planEndDate (Lógica copiada de la Cloud Function)
                         // ¡IMPORTANTE! Esto recalcula la fecha de fin CADA VEZ que se guarda.
-                        const now = new Date();
-                        let newPlanEndDate = new Date(now);
-
-                        if (companyPlan.type === 'demo') {
-                            const daysToAdd = parseInt((companyPlan.duration || '7d').replace('d', '')) || 7;
-                            newPlanEndDate.setDate(newPlanEndDate.getDate() + daysToAdd);
-                        } else if (companyPlan.type === 'pro') {
-                            const planDuration = companyPlan.plan || '1m';
-                            const durationValue = parseInt(planDuration.slice(0, -1)) || 1;
-                            const durationUnit = planDuration.slice(-1);
-                            if (durationUnit === 'm') newPlanEndDate.setMonth(newPlanEndDate.getMonth() + durationValue);
-                            else if (durationUnit === 'y') newPlanEndDate.setFullYear(newPlanEndDate.getFullYear() + durationValue);
-                        }
                         
-                        // Añade la nueva fecha de fin al objeto del plan
-                        // Usamos Timestamp (importado en Paso 1)
-                        companyPlan.endDate = Timestamp.fromDate(newPlanEndDate); 
+                        companyPlan.endDate = companyData.plan.endDate;
+                        
+                         
 
                         // 2. Actualizar el documento en Firestore
                         console.log("Atualizando Firestore com o novo plano:", companyPlan);
@@ -1207,99 +1203,84 @@
 
             
             // --- NUEVO: Listener para el Botón de Eliminar (VERSIÓN DE DIAGNÓSTICO) ---
+            
             if (isEditMode) {
-                const deleteButton = modal.querySelector('#deleteCompanyBtn');
-                deleteButton.addEventListener('click', async (e) => {
-                    console.log("--- INICIO TEST ELIMINAR ---");
-                    console.log("PASO 1: Clic detectado.");
+            const suspendButton = modal.querySelector('#suspendCompanyBtn');
 
-                    // 1. Mostrar NUESTRO modal de confirmación
-                    const confirmed = await showConfirmationModal(
-                        '¿Eliminar Empresa?',
-                        `¿Estás seguro de que deseas eliminar "${companyData.name}"? Esta acción es irreversible y eliminará a todos los usuarios admin asociados.`,
-                        'Sim, Eliminar',
-                        'btn-danger'
-                    );
-                    console.log("PASO 2: Confirmación recibida:", confirmed);
+            // Asumimos 'active' si el campo 'status' no existe (para empresas antiguas)
+            let currentStatus = companyData.status || 'active'; 
 
-                    if (!confirmed) {
-                        console.log("PASO 2.1: Usuario canceló.");
-                        return; // El usuario canceló
-                    }
+            // 1. Configurar el estado inicial del botón (texto, icono y color)
+            const updateButtonState = (status) => {
+                if (status === 'active') {
+                    suspendButton.innerHTML = `<i data-lucide="pause-circle"></i> Suspender Empresa`;
+                    suspendButton.style.color = 'var(--warning-color)';
+                    suspendButton.style.borderColor = 'var(--warning-color)';
+                    suspendButton.style.background = 'transparent'; // Asegura fondo transparente
+                } else { // 'suspended'
+                    suspendButton.innerHTML = `<i data-lucide="play-circle"></i> Reativar Empresa`;
+                    suspendButton.style.color = 'var(--accent-blue)'; // Azul para reactivar
+                    suspendButton.style.borderColor = 'var(--accent-blue)';
+                    suspendButton.style.background = 'transparent'; // Asegura fondo transparente
+                }
+                lucide.createIcons({ nodes: [suspendButton.querySelector('i')] });
+            };
 
-                    // 2. Si confirma, proceder con la eliminación
-                    const originalButtonHTML = deleteButton.innerHTML;
-                    console.log("PASO 3: Entrando al bloque TRY...");
+            updateButtonState(currentStatus); // Llama al inicio para configurar el botón
 
-                    try {
-                        console.log("PASO 4: Deshabilitando botón.");
-                        deleteButton.disabled = true;
-                        deleteButton.innerHTML = `<i data-lucide="loader-circle" style="animation: spin 1s linear infinite;"></i> Eliminando...`;
-                        
-                        console.log("PASO 5: Creando ícono lucide.");
-                        lucide.createIcons({ nodes: [deleteButton.querySelector('i')] });
-                        
-                        console.log("PASO 6: Verificando auth.currentUser.");
-                        if (!auth.currentUser) throw new Error("Usuário Super Admin não autenticado.");
-                        
-                        console.log("PASO 7: Obteniendo ID Token (force refresh)...");
-                        const idToken = await auth.currentUser.getIdToken(true);
-                        console.log("PASO 8: Token recibido.");
-                        
-                        const functionUrl = "https://us-central1-lumix-financas-app.cloudfunctions.net/deleteCompanyAndAdmin";
+            // 2. Añadir el listener de clic
+            suspendButton.addEventListener('click', async (e) => {
+                // Volvemos a leer el status actual (puede haber cambiado)
+                const newStatus = currentStatus === 'active' ? 'suspended' : 'active';
+                const actionText = newStatus === 'suspended' ? 'Suspender' : 'Reativar';
 
-                        // 4. Preparar datos (companyId y adminUserIds)
-                        const dataToSend = {
-                            companyId: companyId, // Ya lo tenemos del scope de showCompanyFormModal
-                            adminUserIds: companyData.adminUserIds || [] // De los datos de la empresa
-                        };
+                const confirmed = await showConfirmationModal(
+                    `¿${actionText} Empresa?`,
+                    `¿Estás seguro de que deseas ${actionText.toLowerCase()} a "${companyData.name}"?`,
+                    `Sim, ${actionText}`,
+                    newStatus === 'suspended' ? 'btn-danger' : 'btn-primary' // Rojo para suspender, Azul para reactivar
+                );
 
-                        console.log("PASO 9: Datos listos. Enviando para eliminar:", dataToSend);
+                if (!confirmed) return;
 
-                        // 5. Llamar a la Cloud Function
-                        const response = await fetch(functionUrl, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${idToken}`
-                            },
-                            body: JSON.stringify({ data: dataToSend })
-                        });
+                const originalButtonHTML = suspendButton.innerHTML;
+                suspendButton.disabled = true;
+                suspendButton.innerHTML = `<i data-lucide="loader-circle" style="animation: spin 1s linear infinite;"></i> Processando...`;
+                lucide.createIcons({ nodes: [suspendButton.querySelector('i')] });
 
-                        console.log("PASO 10: Fetch completado. Status:", response.status);
+                try {
+                    // 3. Actualizar Firestore
+                    const companyRef = doc(db, 'companies', companyId);
+                    await updateDoc(companyRef, {
+                        status: newStatus
+                    });
 
-                        if (!response.ok) {
-                            const errorData = await response.json().catch(() => ({}));
-                            const errorMessage = errorData.error?.message || `Error HTTP ${response.status}`;
-                            console.warn("PASO 10.1: Respuesta de Fetch NO OK.", errorMessage);
-                            throw new Error(errorMessage);
-                        }
+                    // 4. Éxito
+                    showToast(`Empresa ${newStatus === 'suspended' ? 'suspensa' : 'reativada'} com sucesso!`);
 
-                        const resultWrapper = await response.json();
-                        console.log("PASO 11: JSON de respuesta parseado.");
-                        if (resultWrapper.error) throw new Error(resultWrapper.error.message);
+                    // 5. Actualizar estado local y el botón (sin cerrar el modal)
+                    currentStatus = newStatus; // Actualiza el estado local
+                    companyData.status = newStatus; // Actualiza el objeto de datos principal
+                    updateButtonState(currentStatus); // Actualiza la UI del botón
 
-                        // 6. Éxito
-                        console.log("PASO 12: Eliminación exitosa.");
-                        showToast(`Empresa "${companyData.name}" eliminada com sucesso!`);
-                        window.history.back(); // Cierra el modal de edición
+                    suspendButton.disabled = false;
 
-                    } catch (error) {
-                        console.log("!!! BLOQUE CATCH EJECUTADO !!!");
-                        console.error("Erro ao eliminar empresa:", error);
-                        showToast(`Erro ao eliminar: ${error.message}`, true);
-                        
-                        // Restaura el botón si falla
-                        deleteButton.disabled = false;
-                        deleteButton.innerHTML = originalButtonHTML;
-                        
-                        if (document.body.contains(deleteButton)) {
-                             const icon = deleteButton.querySelector('i');
-                             if(icon) lucide.createIcons({ nodes: [icon] });
-                        }
-                    }
-                });
-            }
+                    // onSnapshot se encargará de actualizar la lista principal.
+
+                } catch (error) {
+                    console.error("Erro ao atualizar status da empresa:", error);
+                    showToast(`Erro ao ${actionText.toLowerCase()}: ${error.message}`, true);
+                    suspendButton.disabled = false;
+                    // Restaura el HTML original (antes del 'loading')
+                    suspendButton.innerHTML = originalButtonHTML;
+                    lucide.createIcons({ nodes: [suspendButton.querySelector('i')] });
+                }
+            });
+        }
+        // --- FIN NUEVO LISTENER ---
+
+
+
             // --- FIN NUEVO LISTENER (DIAGNÓSTICO) ---
 
 
