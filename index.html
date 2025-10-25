@@ -252,6 +252,92 @@
         #companies-list .company-card p { font-size: 0.85em; color: var(--text-secondary); margin: 0; }
         #companies-list .company-card .company-actions button { /* Estilo botones editar/ver */ }
 
+        #companies-list .company-card.clickable {
+            cursor: pointer;
+        }
+        #companies-list .company-card .company-card-info {
+            flex-grow: 1;
+            min-width: 0; /* Para que el texto se ajuste */
+        }
+        #companies-list .company-card .company-subtext {
+            font-size: 0.9em;
+            color: var(--text-secondary);
+            margin: 2px 0 0 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        #companies-list .company-card .company-tags {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .plan-tag, .status-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.75em;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+        .plan-tag i, .status-tag i {
+            width: 14px;
+            height: 14px;
+        }
+        .plan-tag.plan-pro {
+            background-color: #c7d2fe; /* Azul claro */
+            color: #3730a3; /* Azul oscuro */
+        }
+        .plan-tag.plan-demo {
+            background-color: #fef08a; /* Amarillo claro */
+            color: #713f12; /* Amarillo oscuro */
+        }
+        
+        .status-tag.status-paid {
+            background-color: #dcfce7; /* Verde claro */
+            color: #15803d; /* Verde oscuro */
+        }
+        .status-tag.status-due {
+            background-color: #fee2e2; /* Rojo claro */
+            color: #b91c1c; /* Rojo oscuro */
+        }
+        .status-tag.status-pending {
+            background-color: #fef3c7; /* Naranja claro */
+            color: #9a3412; /* Naranja oscuro */
+        }
+
+        #companies-list .company-card .company-card-details {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-left: 15px;
+            position: relative;
+        }
+        #companies-list .company-card .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85em;
+            color: var(--text-secondary);
+        }
+        #companies-list .company-card .detail-item:first-child {
+            margin-bottom: 5px;
+        }
+        #companies-list .company-card .detail-item i {
+            width: 14px;
+            height: 14px;
+        }
+        #companies-list .company-card .chevron {
+            color: var(--text-secondary);
+            position: absolute;
+            right: -10px; /* Ajusta si es necesario */
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
     </style>
 </head>
 <body>
@@ -433,34 +519,89 @@
                 return;
             }
             // Lista mejorada con estilo de tarjeta
-            listContainer.innerHTML = allCompanies.map(company => `
-                <div class="company-card" data-company-id="${company.id}">
-                    <div>
+            
+
+            // Lista mejorada con el nuevo diseño de tarjeta
+            listContainer.innerHTML = allCompanies.map(company => {
+                
+                // --- Lógica para los nuevos datos ---
+                const plan = company.plan || {};
+                const planType = plan.type || 'pro'; // 'demo' or 'pro'
+                const planText = plan.text || (planType === 'pro' ? 'PRO' : 'DEMO');
+
+                // --- INICIO LÓGICA DE ESTADO (PLACEHOLDER) ---
+                // ¡IMPORTANTE! Esto es un marcador de posición.
+                // No podemos calcular "Vencido" o "Próximo a Vencer"
+                // hasta que guardemos una fecha de 'createdAt' y 'planEndDate'.
+                let statusKey = 'Pago';
+                let statusClass = 'status-paid';
+                let statusIcon = 'check-circle';
+                
+                if (planType === 'demo') {
+                   statusKey = 'Demo'; 
+                   statusClass = 'status-pending'; // Usamos la clase naranja/amarilla
+                   statusIcon = 'clock';
+                }
+                // --- FIN LÓGICA DE ESTADO (PLACEHOLDER) ---
+
+                // --- Lógica de Fecha (PLACEHOLDER) ---
+                // ¡IMPORTANTE! Esto también es un marcador de posición.
+                // 'company.createdAt' no existe todavía.
+                const createdAt = company.createdAt 
+                    ? new Date(company.createdAt).toLocaleDateString('es-ES') 
+                    : 'N/A';
+                
+                return `
+                <div class="company-card clickable" data-company-id="${company.id}">
+                    <!-- DIV 1: Información Principal (Izquierda) -->
+                    <div class="company-card-info">
                         <h4>${company.name || 'Nombre no definido'}</h4>
-                        <!-- Lógica de renderizado de plan actualizada -->
-                        <p>${renderPlanInfo(company.plan)}</p>
+                        <p class="company-subtext">${company.owner?.name || 'Propietario no definido'}</p>
+                        
+                        <div class="company-tags">
+                            <!-- Etiqueta de Plan -->
+                            <span class="plan-tag ${planType === 'demo' ? 'plan-demo' : 'plan-pro'}">
+                                <i data-lucide="${planType === 'demo' ? 'play-circle' : 'award'}"></i>
+                                ${planText}
+                            </span>
+                            
+                            <!-- Etiqueta de Estado (Placeholder) -->
+                            <span class="status-tag ${statusClass}">
+                                <i data-lucide="${statusIcon}"></i>
+                                ${statusKey}
+                            </span>
+                        </div>
                     </div>
-                    <div>
-                        <button class="header-btn" data-action="edit" title="Editar Empresa"><i data-lucide="edit"></i></button>
-                        <!-- <button class="header-btn" data-action="view" title="Ver Detalles"><i data-lucide="eye"></i></button> -->
+
+                    <!-- DIV 2: Detalles (Derecha) -->
+                    <div class="company-card-details">
+                        <span class="detail-item">
+                            <i data-lucide="calendar"></i>
+                            ${createdAt}
+                        </span>
+                        <span class="detail-item">
+                            <i data-lucide="users"></i>
+                            ${plan.collectorLimit || 'N/A'} Cobradores
+                        </span>
+                        
                     </div>
+
+                    <!-- EL BOTÓN DE EDITAR HA SIDO ELIMINADO -->
                 </div>
-            `).join('');
+                `;
+            }).join('');
+
+
             // Añade listeners a los nuevos botones
-             listContainer.querySelectorAll('.company-card button[data-action="edit"]').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation(); // Evita que el clic en el botón active el clic en la tarjeta
-                    const companyId = e.currentTarget.closest('.company-card').dataset.companyId;
-                    showCompanyFormModal(companyId); // Abre modal en modo edición
-                });
-            });
+             
              // Listener para la tarjeta completa (podría llevar a una vista de detalles en el futuro)
-            listContainer.querySelectorAll('.company-card').forEach(card => {
+            listContainer.querySelectorAll('.company-card.clickable').forEach(card => {
                 card.addEventListener('click', (e) => {
-                     if (e.target.closest('button')) return; // No hacer nada si se hizo clic en un botón
+                     // if (e.target.closest('button')) return; // Ya no hay botones, se puede eliminar esta línea
                      const companyId = card.dataset.companyId;
-                     console.log("Ver detalles de la empresa (Implementación futura):", companyId);
-                     showToast(`Ver detalles de ${allCompanies.find(c=>c.id===companyId)?.name} (Implementación futura)`, false)
+                     
+                     // ¡ACCIÓN NUEVA! Abre el modal de edición
+                     showCompanyFormModal(companyId); 
                 });
             });
 
@@ -667,6 +808,7 @@
             // --- FIN HTML RECONSTRUIDO ---
 
             modal.classList.add('active');
+            history.pushState({ modal: 'companyForm' }, modalTitle); // <-- AÑADIR ESTA LÍNEA
             lucide.createIcons({ nodes: modal.querySelectorAll('[data-lucide]') });
 
             // --- Event Listeners del Modal ---
@@ -898,7 +1040,7 @@
 
                             if (result.success) {
                                 showToast(`Empresa "${companyName}" e Admin criados com sucesso!`);
-                                window.history.back();
+                                modal.classList.remove('active');
                             } else {
                                 throw new Error(result.error || 'Erro desconhecido retornado pela Cloud Function.');
                             }
@@ -932,11 +1074,7 @@
             }); // Fin listener de guardado
 
             // Listener popstate (sin cambios)
-            window.addEventListener('popstate', (event) => {
-                 if (modal.classList.contains('active')) {
-                     modal.classList.remove('active');
-                 }
-            }, { once: true });
+            
         } // Fin showCompanyFormModal
 
         // --- Event Listeners Globales ---
@@ -1033,3 +1171,4 @@
     </script>
 </body>
 </html>
+
