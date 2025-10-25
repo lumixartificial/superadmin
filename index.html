@@ -1322,14 +1322,42 @@
 
 
                     if (isEditMode) {
-                        // --- INICIO: NUEVA LÓGICA DE EDICIÓN ---
+                        // --- INICIO: LÓGICA DE EDIÇÃO ATUALIZADA ---
                         console.log("Modo Edição - Atualizando plano...");
 
-                        // 1. RE-CALCULAR planEndDate (Lógica copiada de la Cloud Function)
-                        // ¡IMPORTANTE! Esto recalcula la fecha de fin CADA VEZ que se guarda.
+                        // --- INICIO: LÓGICA DE DATA DE VENCIMENTO (CORRIGIDA) ---
+                        // Comparamos o plano antigo (companyData.plan.type) com o novo (companyPlan.type)
                         
-                        companyPlan.endDate = companyData.plan.endDate;
-                        
+                        const oldPlanType = companyData.plan?.type || 'pro';
+                        const newPlanType = companyPlan.type;
+
+                        if (oldPlanType === 'demo' && newPlanType === 'pro') {
+                            // *** CENÁRIO 1: UPGRADE (DEMO -> PRO) ***
+                            // O plano é reiniciado HOJE. Recalculamos a data de vencimento.
+                            console.log("Detectado UPGRADE de DEMO para PRO. Reiniciando data de vencimento...");
+                            
+                            const now = new Date();
+                            let newPlanEndDate = new Date(now);
+                            const planDuration = companyPlan.plan || '1m'; // '1m', '3m', '1y', etc.
+                            const durationValue = parseInt(planDuration.slice(0, -1)) || 1;
+                            const durationUnit = planDuration.slice(-1);
+
+                            if (durationUnit === 'm') {
+                                newPlanEndDate.setMonth(newPlanEndDate.getMonth() + durationValue);
+                            } else if (durationUnit === 'y') {
+                                newPlanEndDate.setFullYear(newPlanEndDate.getFullYear() + durationValue);
+                            }
+                            
+                            // Atribui a NOVA data de vencimento
+                            companyPlan.endDate = Timestamp.fromDate(newPlanEndDate); 
+
+                        } else {
+                            // *** CENÁRIO 2: EDITANDO (PRO -> PRO) ou (DEMO -> DEMO) ***
+                            // Mantemos a data de vencimento original.
+                            console.log("Mantendo data de vencimento original.");
+                            companyPlan.endDate = companyData.plan.endDate;
+                        }
+                        // --- FIN: LÓGICA DE DATA DE VENCIMENTO (CORRIGIDA) ---
                          
 
                         // 2. Actualizar el documento en Firestore
