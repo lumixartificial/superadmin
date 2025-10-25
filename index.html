@@ -579,16 +579,23 @@
                             console.log("Token ID obtenido/refrescado."); // No mostramos el token por seguridad
 
 
-                            console.log("Chamando Cloud Function 'createCompanyAndAdmin'...");
-                            // Asegúrate que 'functions' esté inicializado correctamente antes de esta llamada
+                            console.log("Chamando Cloud Function 'createCompanyAndAdmin' via fetch (manual auth)...");
+                            
                             if (!functions) {
-                                throw new Error("Firebase Functions SDK no inicializado.");
+                                // INICIALIZACIÓN DE FUNCTIONS MOVIDA AQUÍ (solo si es necesario)
+                                // Esto puede causar un error si se llama 'getFunctions' después de la carga inicial
+                                // La inicialización retrasada 'let functions;' de la línea 268 no es ideal.
+                                // Vamos a inicializarlo en el AuthStateChange.
+                                console.log("Inicializando SDK de Functions (tarde)...");
+                                functions = getFunctions(app); // Intenta inicializar
                             }
-                            const createCompanyFunction = httpsCallable(functions, 'createCompanyAndAdmin');
+                            
+                            // Usamos la URL de la función que conocemos por los logs
+                            const functionUrl = "https://us-central1-lumix-financas-app.cloudfunctions.net/createCompanyAndAdmin";
                             
                             // Crea un objeto NUEVO y LIMPIO para enviar
                             const dataToSend = {
-                                companyData: {
+                                companyData: { 
                                     name: companyBaseData.name,
                                     settings: { ...companyBaseData.settings }, 
                                     plan: { ...companyBaseData.plan }          
@@ -599,129 +606,191 @@
                             
                             console.log("Datos a enviar (limpios):", JSON.stringify(dataToSend)); // Log para verificar
 
-                            // Llama a la función pasándole los datos limpios
-                            const result = await createCompanyFunction(dataToSend); 
+                            // --- NUEVA LLAMADA con FETCH (reemplaza httpsCallable) ---
+                            // httpsCallable envuelve los datos en un objeto { data: ... }
+                            // La función onRequest esperará ese mismo formato.
+                            const response = await fetch(functionUrl, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${idToken}` // ¡Enviamos el token manualmente!
+                                },
+                                body: JSON.stringify({ data: dataToSend }) // Mantenemos el formato de onCall
+                            });
 
-                            console.log("Resultado da Cloud Function:", result.data);
+                            if (!response.ok) {
+                                // Error de red o HTTP (4xx, 5xx)
+                                const errorData = await response.json().catch(() => ({})); // Intenta parsear error
+                                const errorMessage = errorData.error?.message || `Error HTTP ${response.status}: ${response.statusText}`;
+                                throw new Error(errorMessage);
+                            }
 
-                            // Verifica la respuesta de la función
-                            if (result.data.success) {
-                                showToast(`Empresa "${companyName}" e Admin criados com sucesso! ID: ${result.data.companyId}`);
-                                window.history.back(); // Cierra el modal si fue exitoso
+                            // La respuesta de una función onRequest compatible con onCall
+                            // estará envuelta en un objeto { result: ... }
+                            const resultWrapper = await response.json(); 
+                            
+                            // Verificamos si la respuesta es un error de la función
+                            if (resultWrapper.error) {
+                                throw new Error(resultWrapper.error.message || 'Error desconocido en la función');
+                            }
+                            
+                            const result = resultWrapper.result; // Sacamos el resultado real
+
+                            console.log("Resultado da Cloud Function:", result);
+
+                            // Verifica la respuesta de la función (la lógica aquí es 'result' no 'result.data')
+                            if (result.success) {
+                                showToast(`Empresa "${companyName}" e Admin criados com sucesso! ID: ${result.companyId}`);
+                                window.history.back(); // Cierra el modal
                             } else {
                                 // Si la función devolvió success: false o un error específico
-                                throw new Error(result.data.error || 'Erro desconhecido retornado pela Cloud Function.');
+                                throw new Error(result.error || 'Erro desconhecido retornado pela Cloud Function.');
                             }
 
                         } catch (functionError) {
-                            // Captura errores al llamar o ejecutar la Cloud Function
                             console.error("Erro ao chamar/executar a Cloud Function:", functionError);
-                            // Intenta mostrar un mensaje de error más específico si está disponible
-                            let detailedErrorMessage = 'Falha ao criar a empresa. Verifique os logs da Cloud Function.';
-                            if (functionError.code && functionError.message) {
-                                // Muestra detalles adicionales si existen
-                                const details = functionError.details ? ` Detalhes: ${JSON.stringify(functionError.details)}` : '';
-                                detailedErrorMessage = `Erro (${functionError.code}): ${functionError.message}${details}`;
-                                console.log("Detalles completos del Error:", functionError); // Log completo del error
-                            } else if (functionError.message) {
-                                detailedErrorMessage = functionError.message;
-                            }
-                            showToast(detailedErrorMessage, true);
-                            // Mantenemos el modal abierto para que el usuario pueda corregir datos si es necesario
+                            showToast(`Erro ao criar empresa: ${functionError.message}`, true);
+                            // Log completo para depuración
+                            console.log("Detalles completos del Error:", functionError);
+                        } finally {
+                            // Reactiva el botón
+                            saveButton.disabled = false;
+                            saveButton.innerHTML = originalButtonHTML;
+                            lucide.createIcons({ nodes: [saveButton.querySelector('i')] });
                         }
-                        // --- Fin Llamada Real ---
                     }
-                } catch (error) { // Catch para errores generales (como fallo de red en updateDoc)
-                    console.error("Erro geral ao salvar/criar empresa:", error);
-                    showToast(`Erro: ${error.message || 'Ocorreu um problema.'}`, true);
-                } finally {
-                    // Rehabilita el botón independientemente del resultado
+
+                } catch (generalError) {
+                    console.error("Error general en saveCompanyBtn:", generalError);
+                    showToast(`Error: ${generalError.message}`, true);
+                    // Reactiva el botón
                     saveButton.disabled = false;
-                    saveButton.innerHTML = `<i data-lucide="save"></i> ${saveButtonText}`;
+                    saveButton.innerHTML = originalButtonHTML;
                     lucide.createIcons({ nodes: [saveButton.querySelector('i')] });
                 }
-            }); // Fin listener saveCompanyBtn
+            });
 
-        } // Fin showCompanyFormModal
+            // Listener para cerrar el modal si se usa el botón "Atrás" del navegador
+            window.addEventListener('popstate', (event) => {
+                 if (modal.classList.contains('active')) {
+                     modal.classList.remove('active');
+                 }
+            }, { once: true }); // Solo escucha una vez por si acaso
+        }
 
+        // --- Event Listeners Globales ---
         function setupSuperAdminEventListeners() {
-            const logoutBtn = document.getElementById('logout-btn');
-            if (logoutBtn) {
-                // Remove listener anterior para evitar duplicados al recargar
-                logoutBtn.removeEventListener('click', handleLogout); 
-                logoutBtn.addEventListener('click', handleLogout);
-            }
-            const addCompanyBtn = document.getElementById('addCompanyBtn');
-            if (addCompanyBtn) {
-                 console.log("Añadiendo listener a addCompanyBtn"); // Log
-                 // Remove listener anterior
-                addCompanyBtn.removeEventListener('click', handleAddCompanyClick);
-                addCompanyBtn.addEventListener('click', handleAddCompanyClick);
-            }
-            // Listener de historial para modales (Back button)
-             window.removeEventListener('popstate', handlePopState); // Limpia anterior
-             window.addEventListener('popstate', handlePopState);
-        }
-
-        // Funciones handler separadas para poder remover listeners
-        function handleLogout() {
-             signOut(auth).catch(err => console.error("Error al cerrar sesión Super Admin:", err));
-        }
-        function handleAddCompanyClick() {
-            console.log("handleAddCompanyClick Fired!"); // Log
-            showCompanyFormModal();
-        }
-        function handlePopState(event) {
-             console.log("Popstate event:", event.state); // Log
-             // Cierra todos los modales si el usuario navega hacia atrás
-             document.querySelectorAll('.modal-view.active').forEach(modal => {
-                 console.log("Cerrando modal por popstate:", modal.id); // Log
-                 modal.classList.remove('active');
-             });
-             // Si el estado era de un modal, ya está cerrado. Si no, onAuthStateChanged manejará la vista.
-        }
-
-        function showToast(message, isError = false) {
-             const container = document.getElementById('toast-container');
-             const toast = document.createElement('div');
-             toast.className = `toast ${isError ? 'toast-error' : 'toast-success'}`;
-             toast.textContent = message;
-             container.appendChild(toast);
-             setTimeout(() => toast.classList.add('show'), 10);
-             setTimeout(() => {
-                 toast.classList.remove('show');
-                 setTimeout(() => toast.remove(), 300); // Reduce tiempo de remoción
-             }, isError ? 4000 : 2500); // Más tiempo para errores
-        }
-
-        // --- Inicialización ---
-        function initSuperAdmin() {
-            onAuthStateChanged(auth, (user) => {
-                if (user) {
-                    const SUPER_ADMIN_UID = "4o3DgFdtLdfOdIqltUH90Sk3Rsi1"; // TU UID
-                    if (user.uid === SUPER_ADMIN_UID) {
-                        // --- Inicializa Functions SDK AQUÍ ---
-                        if (!functions) { // Evita reinicializar
-                            console.log("Usuario Super Admin autenticado, inicializando Functions SDK...");
-                            functions = getFunctions(app, 'us-central1'); 
-                        }
-                        // --- Fin Inicialización ---
-                        showSuperAdminApp(user);
-                    } else {
-                        console.warn("Intento de acceso de usuario no Super Admin:", user.uid);
-                        signOut(auth); 
-                        showLoginView(); 
-                        showToast("Acceso denegado. Solo el Super Admin puede entrar.", true);
-                    }
-                } else {
-                    showLoginView(); 
+            // Limpia listeners anteriores para evitar duplicados
+            const oldLogoutBtn = document.getElementById('logout-btn');
+            const newLogoutBtn = oldLogoutBtn.cloneNode(true); // Clona para limpiar listeners
+            oldLogoutBtn.parentNode.replaceChild(newLogoutBtn, oldLogoutBtn);
+            newLogoutBtn.addEventListener('click', async () => {
+                showToast('Cerrando sesión...', false);
+                try {
+                    await signOut(auth);
+                    // onAuthStateChanged se encargará de mostrar el login
+                    console.log("Logout OK");
+                } catch (error) {
+                    console.error("Error en Logout:", error);
+                    showToast('Error al cerrar sesión.', true);
                 }
+            });
+
+            const oldAddBtn = document.getElementById('addCompanyBtn');
+            const newAddBtn = oldAddBtn.cloneNode(true);
+            oldAddBtn.parentNode.replaceChild(newAddBtn, oldAddBtn);
+            newAddBtn.addEventListener('click', () => {
+                showCompanyFormModal(); // Abre en modo creación
             });
         }
 
-        initSuperAdmin(); // Llama a la inicialización
+
+        // --- Toast/Notificaciones ---
+        function showToast(message, isError = false) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            if (isError) toast.classList.add('toast-error');
+            // else toast.classList.add('toast-success'); // Opcional para éxito
+            toast.textContent = message;
+            container.appendChild(toast);
+            
+            // Forzar reflow para activar la animación de entrada
+            void toast.offsetWidth; 
+            
+            toast.classList.add('show');
+
+            // Ocultar después de 3 segundos
+            setTimeout(() => {
+                toast.classList.remove('show');
+                // Eliminar del DOM después de la animación de salida
+                toast.addEventListener('transitionend', () => {
+                    if (toast.parentNode === container) { // Comprueba si aún existe
+                        container.removeChild(toast);
+                    }
+                }, { once: true });
+            }, 3000);
+        }
+
+        // --- Inicialización y Autenticación ---
+        function initializeAppLogic() {
+            // Listener principal de autenticación
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    console.log("AuthStateChanged: Usuario autenticado:", user.uid);
+                    // --- INICIALIZACIÓN DE FUNCTIONS ---
+                    // Inicializa Functions aquí, solo cuando el usuario está logueado
+                    // y sabemos que podríamos necesitarlo.
+                    if (!functions) {
+                        console.log("Inicializando SDK de Functions...");
+                        functions = getFunctions(app); // Inicializa la variable global 'functions'
+                    }
+                    // --- FIN INICIALIZACIÓN ---
+                    
+                    // TODO: Añadir verificación de Custom Claim de Super Admin
+                    // por ahora, si está logueado, mostramos la app.
+                    showSuperAdminApp(user);
+                } else {
+                    console.log("AuthStateChanged: Usuario NO autenticado.");
+                    showLoginView();
+                }
+            });
+
+            // Reemplazo para 'popstate' que no funciona bien en todos los iframes
+            // Detecta 'history.back()' llamado desde el modal
+            let lastPath = window.location.hash;
+             window.addEventListener('hashchange', () => {
+                if (window.location.hash === '') {
+                    const modal = document.getElementById('companyFormModal');
+                     if (modal && modal.classList.contains('active')) {
+                         modal.classList.remove('active');
+                     }
+                }
+                 lastPath = window.location.hash;
+             });
+             // Modifica 'showCompanyFormModal' para usar hashes
+             // ... (Modificación necesaria en 'showCompanyFormModal' y 'close')
+             // (Por ahora, lo dejamos como estaba, el 'popstate' es problemático)
+             
+             // Solución simple para 'popstate' (reemplazando el 'popstate' anterior)
+             window.onpopstate = function(event) {
+                // Cerramos CUALQUIER modal de vista completa
+                 const activeModal = document.querySelector('.modal-view.active');
+                 if (activeModal) {
+                     activeModal.classList.remove('active');
+                 }
+             };
+             // Y modificamos el botón de cierre del modal para que use history.back()
+             // Esto ya está hecho en 'showCompanyFormModal' (línea 467)
+        }
+
+        // --- Punto de Entrada ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeAppLogic();
+        });
 
     </script>
 </body>
 </html>
+
 
