@@ -1413,6 +1413,19 @@
                     modalContent.style.opacity = '0';
                     modalOverlay.classList.remove('active');
                     
+                    // --- CORRECCIÓN ---
+                    // 'transitionend' no es 100% fiable.
+                    // Lo reemplazamos con un setTimeout que espera que la animación termine.
+                    // Tu animación CSS dura 0.2s (200ms), así que esperamos 250ms.
+                    setTimeout(() => {
+                        if (document.body.contains(modalOverlay)) {
+                            document.body.removeChild(modalOverlay);
+                        }
+                        resolve(result); // Resuelve la promesa
+                    }, 250); // 250ms (un poco más que tu transición de 0.2s)
+                    // --- FIN DE LA CORRECCIÓN ---
+
+                    /* --- ESTE ES EL CÓDIGO ANTIGUO QUE DEBE SER ELIMINADO ---
                     // Espera a que termine la animación de salida
                     modalOverlay.addEventListener('transitionend', () => {
                         if (document.body.contains(modalOverlay)) {
@@ -1420,6 +1433,7 @@
                         }
                         resolve(result); // Resuelve la promesa
                     }, { once: true });
+                    */
                 };
 
                 // Event Listeners
@@ -1472,4 +1486,3 @@
     </script>
 </body>
 </html>
-
