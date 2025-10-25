@@ -341,6 +341,108 @@
             transform: translateY(-50%);
         }
 
+        /* --- INICIO: CSS para Nuevos Controles --- */
+        .tab-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .tab-bar .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1em;
+            font-weight: 600;
+            padding: 10px 18px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 0.2s, border-color 0.2s;
+        }
+        .tab-bar .tab-btn:hover {
+            color: var(--text-primary);
+        }
+        .tab-bar .tab-btn.active {
+            color: var(--accent-blue);
+            border-bottom-color: var(--accent-blue);
+        }
+        .tab-bar .tab-btn i { width: 18px; height: 18px; }
+
+        .search-bar-container {
+            display: flex;
+            align-items: center;
+            background-color: var(--surface);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0 12px;
+            margin-bottom: 15px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .search-bar-container:focus-within {
+             border-color: var(--accent-blue);
+             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+        .search-bar-container i {
+            color: var(--text-secondary);
+            width: 20px; height: 20px;
+        }
+        .search-bar-container input {
+            flex-grow: 1;
+            padding: 14px 10px;
+            border: none;
+            background: none;
+            color: var(--text-primary);
+            font-size: 1em;
+            outline: none;
+        }
+        .search-bar-container #clear-search-btn {
+            background: none; border: none; color: var(--text-secondary);
+            cursor: pointer; padding: 4px; border-radius: 50%;
+        }
+        .search-bar-container #clear-search-btn i { width: 16px; height: 16px; }
+
+        .filter-bar {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap; /* Para móviles */
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1; /* Para que ocupen espacio */
+            min-width: 150px; /* Para que no se encojan demasiado */
+        }
+        .filter-group label {
+            font-size: 0.8em;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+        .filter-group select {
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background-color: var(--surface);
+            color: var(--text-primary);
+            font-size: 0.9em;
+            font-weight: 500;
+            cursor: pointer;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+        }
+        .filter-group select:focus {
+             border-color: var(--accent-blue);
+             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+        /* --- FIN: CSS para Nuevos Controles --- */
+
     </style>
 </head>
 <body>
@@ -380,6 +482,51 @@
         <main>
             <div id="companies-view" class="view active container">
                 <h2 class="section-title">Empresas Registradas</h2>
+
+                <div class="controls-container" style="margin-bottom: 20px;">
+                    
+                    <!-- 1. Pestañas (PRO / DEMO) -->
+                    <div class="tab-bar">
+                        <button class="tab-btn active" data-tab="pro">
+                            <i data-lucide="award"></i> Clientes PRO
+                        </button>
+                        <button class="tab-btn" data-tab="demo">
+                            <i data-lucide="play-circle"></i> Clientes DEMO
+                        </button>
+                    </div>
+
+                    <!-- 2. Barra de Búsqueda -->
+                    <div class="search-bar-container">
+                        <i data-lucide="search"></i>
+                        <input type="text" id="company-search" placeholder="Buscar por empresa ou proprietário...">
+                        <button id="clear-search-btn" style="display: none;"><i data-lucide="x"></i></button>
+                    </div>
+
+                    <!-- 3. Barra de Filtros (Orden y Planes PRO) -->
+                    <div class="filter-bar" id="pro-filters-container">
+                        <div class="filter-group">
+                            <label for="sort-order">Ordenar por:</label>
+                            <select id="sort-order">
+                                <option value="due_date">Vencimento (Próximo)</option>
+                                <option value="alphabetical_asc">Nome (A-Z)</option>
+                                <option value="alphabetical_desc">Nome (Z-A)</option>
+                                <option value="newest">Mais Recentes</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="plan-filter">Filtrar Plano:</label>
+                            <select id="plan-filter">
+                                <option value="all">Todos os Planos PRO</option>
+                                <option value="1m">Mensal</option>
+                                <option value="3m">Trimestral</option>
+                                <option value="6m">Semestral</option>
+                                <option value="1y">Anual</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+
                 <div id="companies-list">
                     <p>Cargando empresas...</p>
                     <!-- La lista de empresas se cargará aquí -->
@@ -442,6 +589,13 @@
         let allCompanies = [];
         let currentSuperAdmin = null;
 
+        // --- INICIO: Nuevas variables de estado para filtros ---
+        let currentFilterTab = 'pro'; // 'pro' o 'demo'
+        let currentSearchTerm = '';
+        let currentSortOrder = 'due_date'; // 'due_date', 'alphabetical_asc', 'alphabetical_desc', 'newest'
+        let currentPlanFilter = 'all'; // 'all', '1m', '3m', etc.
+        // --- FIN: Nuevas variables de estado ---
+
         // --- Funciones Principales (Implementación básica) ---
 
         async function handleSuperAdminLogin(event) {
@@ -501,6 +655,66 @@
             if(loginViewIcons.length > 0) lucide.createIcons({nodes: loginViewIcons});
         }
 
+        // --- INICIO: NUEVA Función de Filtro y Renderizado ---
+        function filterAndRenderCompanies() {
+            let filteredCompanies = [...allCompanies]; // Copia para no modificar la original
+
+            // 1. Filtrar por Pestaña (PRO / DEMO)
+            filteredCompanies = filteredCompanies.filter(company => {
+                const planType = company.plan?.type || 'pro'; // Asume 'pro' si no existe
+                return planType === currentFilterTab;
+            });
+
+            // 2. Filtrar por Barra de Búsqueda (Nombre de Empresa O Propietario)
+            if (currentSearchTerm) {
+                const term = currentSearchTerm.toLowerCase().trim();
+                filteredCompanies = filteredCompanies.filter(company => {
+                    const companyName = company.name?.toLowerCase() || '';
+                    const ownerName = company.owner?.name?.toLowerCase() || '';
+                    return companyName.includes(term) || ownerName.includes(term);
+                });
+            }
+
+            // 3. Filtrar por Tipo de Plan PRO (solo si la pestaña PRO está activa)
+            if (currentFilterTab === 'pro' && currentPlanFilter !== 'all') {
+                filteredCompanies = filteredCompanies.filter(company => {
+                    const planDuration = company.plan?.plan; // '1m', '3m', '1y', etc.
+                    return planDuration === currentPlanFilter;
+                });
+            }
+
+            // 4. Ordenar
+            switch (currentSortOrder) {
+                case 'due_date':
+                    // Ordena por fecha de vencimiento (los más cercanos primero)
+                    // Los que no tienen fecha (null/undefined) van al final.
+                    filteredCompanies.sort((a, b) => {
+                        const aDate = a.plan?.endDate?.seconds || Infinity;
+                        const bDate = b.plan?.endDate?.seconds || Infinity;
+                        return aDate - bDate;
+                    });
+                    break;
+                case 'alphabetical_asc':
+                    filteredCompanies.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+                    break;
+                case 'alphabetical_desc':
+                    filteredCompanies.sort((a, b) => (b.name || '').localeCompare(a.name || ''));
+                    break;
+                case 'newest':
+                    // Ordena por fecha de creación (los más nuevos primero)
+                    filteredCompanies.sort((a, b) => {
+                        const aDate = a.createdAt?.seconds || 0;
+                        const bDate = b.createdAt?.seconds || 0;
+                        return bDate - aDate; // Descendente
+                    });
+                    break;
+            }
+
+            // 5. Finalmente, llamar a renderCompaniesList con la lista filtrada y ordenada
+            renderCompaniesList(filteredCompanies);
+        }
+        // --- FIN: NUEVA Función ---
+
         function loadCompanies() {
             const listContainer = document.getElementById('companies-list');
             listContainer.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 20px;">Cargando...</p>'; // Indicador de carga mejorado
@@ -508,24 +722,41 @@
             // Escucha la colección /companies
             onSnapshot(collection(db, 'companies'), (snapshot) => {
                 allCompanies = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderCompaniesList();
+                // ANTERIOR: renderCompaniesList();
+                filterAndRenderCompanies(); // <-- NUEVA LLAMADA
             }, (error) => {
                 console.error("Error al cargar empresas:", error);
                 listContainer.innerHTML = '<p style="text-align: center; color: var(--danger-color); padding: 20px;">Error al cargar datos.</p>';
             });
         }
 
-        function renderCompaniesList() {
+        // ANTERIOR: function renderCompaniesList() {
+        function renderCompaniesList(companiesToRender) { // <-- MODIFICADO
             const listContainer = document.getElementById('companies-list');
-            if (allCompanies.length === 0) {
-                listContainer.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 40px 20px;">No hay empresas registradas todavía. Haz clic en el botón "+" para añadir la primera.</p>';
+            
+            // ANTERIOR: if (allCompanies.length === 0) {
+            if (companiesToRender.length === 0) { // <-- MODIFICADO
+                // --- INICIO: Mensaje de 'No resultados' mejorado ---
+                let noResultsMessage = '';
+                if (currentSearchTerm) {
+                    noResultsMessage = `Nenhuma empresa encontrada para "<strong style="color: var(--text-primary);">${currentSearchTerm}</strong>".`;
+                } else if (currentFilterTab === 'demo') {
+                    noResultsMessage = 'Nenhuma empresa DEMO registrada.';
+                } else if (currentPlanFilter !== 'all') {
+                    noResultsMessage = 'Nenhuma empresa PRO encontrada com esse filtro de plano.';
+                } else {
+                    noResultsMessage = 'Não há empresas registradas ainda. Clique no botão "+" para adicionar a primeira.';
+                }
+                listContainer.innerHTML = `<p style="text-align: center; color: var(--text-secondary); padding: 40px 20px;">${noResultsMessage}</p>`;
                 return;
+                // --- FIN: Mensaje 'No resultados' ---
             }
             // Lista mejorada con estilo de tarjeta
             
 
             // Lista mejorada con el nuevo diseño de tarjeta
-            listContainer.innerHTML = allCompanies.map(company => {
+            // ANTERIOR: listContainer.innerHTML = allCompanies.map(company => {
+            listContainer.innerHTML = companiesToRender.map(company => { // <-- MODIFICADO
                 
                 // --- Lógica para los nuevos datos ---
                 const plan = company.plan || {};
@@ -1314,6 +1545,69 @@
             newAddBtn.addEventListener('click', () => {
                 showCompanyFormModal(); // Abre en modo creación
             });
+
+            // --- INICIO: NUEVOS Listeners para Filtros ---
+            
+            // 1. Listeners para Pestañas (PRO / DEMO)
+            const proFiltersContainer = document.getElementById('pro-filters-container');
+            document.querySelectorAll('.tab-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const newTab = e.currentTarget.dataset.tab;
+                    if (newTab === currentFilterTab) return; // No hacer nada si ya está activa
+
+                    currentFilterTab = newTab;
+                    
+                    // Actualiza UI de botones
+                    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                    e.currentTarget.classList.add('active');
+
+                    // Oculta filtros de plan PRO si estamos en DEMO
+                    if (currentFilterTab === 'demo') {
+                        proFiltersContainer.style.display = 'none';
+                    } else {
+                        proFiltersContainer.style.display = 'flex';
+                    }
+
+                    filterAndRenderCompanies();
+                });
+            });
+
+            // 2. Listener para Barra de Búsqueda (con un pequeño 'debounce')
+            const searchInput = document.getElementById('company-search');
+            const clearSearchBtn = document.getElementById('clear-search-btn');
+            let searchTimeout;
+
+            searchInput.addEventListener('input', (e) => {
+                currentSearchTerm = e.target.value;
+                clearTimeout(searchTimeout); // Resetea el timer
+
+                // Muestra/oculta el botón 'X'
+                clearSearchBtn.style.display = currentSearchTerm ? 'block' : 'none';
+
+                // Espera 300ms después de que el usuario deje de teclear
+                searchTimeout = setTimeout(() => {
+                    filterAndRenderCompanies();
+                }, 300); 
+            });
+
+            clearSearchBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                currentSearchTerm = '';
+                clearSearchBtn.style.display = 'none';
+                filterAndRenderCompanies();
+            });
+
+            // 3. Listeners para Selects (Ordenar y Filtrar Plan)
+            document.getElementById('sort-order').addEventListener('change', (e) => {
+                currentSortOrder = e.target.value;
+                filterAndRenderCompanies();
+            });
+
+            document.getElementById('plan-filter').addEventListener('change', (e) => {
+                currentPlanFilter = e.target.value;
+                filterAndRenderCompanies();
+            });
+            // --- FIN: NUEVOS Listeners ---
         }
 
 
