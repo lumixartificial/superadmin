@@ -916,7 +916,7 @@
 
         function showCompanyFormModal(companyId = null) {
             const isEditMode = companyId !== null;
-            const companyData = isEditMode ? allCompanies.find(c => c.id === companyId) : {}; // Obtiene datos si edita
+            const companyData = isEditMode ? allCompanies.find(c => c.id === companyId) : {}; 
 
             const modal = document.getElementById('companyFormModal');
             if (!modal) return;
@@ -924,7 +924,13 @@
             const modalTitle = isEditMode ? 'Editar Empresa' : 'Registrar Nova Empresa Financeira';
             const saveButtonText = isEditMode ? 'Salvar Alterações' : 'Criar Empresa e Admin';
 
-            // --- Opciones para los nuevos selects ---
+            // --- Lógica inteligente para el Email ---
+            // Buscamos el email en varios lugares posibles. Si no existe, permitiremos editarlo.
+            const existingEmail = isEditMode ? (companyData.adminEmail || companyData.email || companyData.owner?.email || '') : '';
+            // Solo bloqueamos el campo si REALMENTE tenemos un email guardado
+            const isEmailLocked = isEditMode && existingEmail.length > 0;
+
+            // --- Opciones para los selects ---
             const demoDurationOptions = [
                 { value: '1d', text: '1 Dia' },
                 { value: '2d', text: '2 Dias' },
@@ -946,18 +952,15 @@
                 { value: '3', text: '3 Cobradores' },
                 { value: '5', text: '5 Cobradores' },
                 { value: 'custom', text: 'Personalizado' },
-                // { value: '-1', text: 'Ilimitado' } // Opción ilimitada (añadida si se necesita)
             ];
 
             const currencyOptions = Object.entries(CURRENCY_CONFIGS).map(([code, config]) => {
-                // Selecciona BRL por defecto si no hay nada, o la moneda guardada
                 const selected = (companyData.settings?.currency || 'BRL') === code ? 'selected' : '';
                 return `<option value="${code}" ${selected}>${config.country} (${config.symbol} ${code})</option>`;
-            }).sort((a, b) => a.localeCompare(b)).join(''); // Ordena alfabéticamente por país
-            // --- Fin Opciones ---
+            }).sort((a, b) => a.localeCompare(b)).join('');
 
 
-            // --- HTML del Modal RECONSTRUIDO ---
+            // --- HTML del Modal ---
             modal.innerHTML = `
                 <header class="modal-header">
                     <button id="closeCompanyFormModal"><i data-lucide="arrow-left"></i></button>
@@ -966,7 +969,7 @@
                 <div class="modal-content-wrapper container">
                     <form id="company-form">
 
-                        <!-- Paso 1: Datos de la Empresa (Común) -->
+                        <!-- Paso 1: Datos de la Empresa -->
                         <h3 class="section-title" style="margin-top: 10px; font-size: 1.1em;">Dados da Empresa e Proprietário</h3>
                         <div class="form-group">
                             <label for="company-name">Nome da Empresa Financeira</label>
@@ -993,15 +996,14 @@
                              </div>
                             <div>
                                 <label for="company-currency">Moeda Principal</label>
-                                <select id="company-currency" ${isEditMode ? 'disabled' : ''}> <!-- No editable en modo edición por ahora -->
+                                <select id="company-currency" ${isEditMode ? 'disabled' : ''}> 
                                      ${currencyOptions}
                                 </select>
                             </div>
                         </div>
 
 
-                        <!-- Paso 2: Tipo de Cuenta (Solo en Creación) -->
-                        
+                        <!-- Paso 2: Tipo de Cuenta -->
                         <h3 class="section-title" style="margin-top: 30px; font-size: 1.1em;">Tipo de Conta</h3>
                         <div class="plan-type-selector">
                             <input type="radio" id="plan-type-demo" name="plan-type" value="demo" checked>
@@ -1060,43 +1062,54 @@
                         </div>
                         
 
-                        <!-- Campos de Admin (Solo en Creación) -->
-                        ${!isEditMode ? `
-                        <h3 class="section-title" style="margin-top: 30px; font-size: 1.1em;">Dados do Administrador Principal</h3>
+                        <!-- SECCIÓN DE CREDENCIALES (MODIFICADA) -->
+                        <h3 class="section-title" style="margin-top: 30px; font-size: 1.1em;">
+                            ${isEditMode ? 'Credenciais de Acesso (Admin)' : 'Dados do Administrador Principal'}
+                        </h3>
+                        
                         <div class="form-group">
                             <label for="admin-email">Email do Admin</label>
-                            <input type="email" id="admin-email" required autocomplete="off">
+                            <!-- 
+                                CORRECCIÓN: 
+                                Si 'isEmailLocked' es true (tenemos email), es readonly y gris.
+                                Si es false (no hay email guardado), es editable y blanco para que lo corrijas.
+                            -->
+                            <input type="email" id="admin-email" 
+                                   value="${existingEmail}" 
+                                   placeholder="${isEditMode ? 'Digite o email do admin para corrigir o registro' : 'email@exemplo.com'}"
+                                   ${isEmailLocked ? 'readonly style="background-color: var(--bg); opacity: 0.7;"' : 'required style="background-color: var(--surface); border-color: var(--accent-blue);"'} 
+                                   autocomplete="off">
+                            ${!isEmailLocked && isEditMode ? '<p style="color: var(--warning-color); font-size: 0.8em; margin-top: 5px;">⚠️ O email não foi encontrado. Por favor, insira-o manualmente para salvar.</p>' : ''}
                         </div>
-                        <div class="form-group">
-                            <label for="admin-password">Senha Temporária do Admin</label>
-                            <input type="password" id="admin-password" required autocomplete="new-password">
-                            <p style="font-size: 0.8em; color: var(--text-secondary); margin-top: 5px;">Mínimo 6 caracteres.</p>
-                        </div>
-                        ` : ''}
 
-                        
+                        <div class="form-group">
+                            <label for="admin-password">${isEditMode ? 'Nova Senha' : 'Senha Temporária do Admin'}</label>
+                            <input type="text" id="admin-password" 
+                                   ${!isEditMode ? 'required' : ''} 
+                                   placeholder="${isEditMode ? 'Deixe em branco para manter a atual' : 'Mínimo 6 caracteres'}" 
+                                   autocomplete="new-password">
+                            
+                            <p style="font-size: 0.8em; color: var(--text-secondary); margin-top: 5px;">
+                                ${isEditMode ? 'Preencha apenas se desejar alterar a senha do administrador.' : 'Mínimo 6 caracteres.'}
+                            </p>
+                        </div>
 
                     </form>
-                
-                
                 </div>
-                <div class="action-buttons" style="flex-wrap: wrap;"> <!-- 'flex-wrap' añadido para móviles -->
+                <div class="action-buttons" style="flex-wrap: wrap;"> 
                     
-                    <!-- Botón de Eliminar (Solo Edición) -->
                     ${isEditMode ? `
                     <button id="deleteCompanyBtn" class="btn-danger" style="background-color: transparent; border: 2px solid var(--danger-color); color: var(--danger-color); flex-basis: 100%; order: 3;">
                         <i data-lucide="trash-2"></i> Eliminar Empresa
                     </button>
                     ` : ''}
 
-                    <!-- Botón de Suspender (Solo Edición) -->
                     ${isEditMode ? `
                     <button id="suspendCompanyBtn" class="btn-secondary" style="background-color: transparent; border: 2px solid var(--warning-color); color: var(--warning-color); flex-grow: 1; order: 2;">
-                        <!-- El texto (Suspender/Reativar) se pondrá con JS -->
+                        <!-- El texto se pondrá con JS -->
                     </button>
                     ` : ''}
 
-                    <!-- Botón de Guardar (Siempre visible) -->
                     <button id="saveCompanyBtn" class="btn-primary" style="flex-grow: 1; order: 1;">
                         <i data-lucide="save"></i> ${saveButtonText}
                     </button>
@@ -1104,36 +1117,28 @@
                 </div>
             `;
 
-
-            // --- FIN HTML RECONSTRUIDO ---
-
             modal.classList.add('active');
-            history.pushState({ modal: 'companyForm' }, modalTitle); // <-- AÑADIR ESTA LÍNEA
+            history.pushState({ modal: 'companyForm' }, modalTitle);
             lucide.createIcons({ nodes: modal.querySelectorAll('[data-lucide]') });
 
-            // --- INICIO: NUEVO BLOQUE PARA POBLAR EL FORMULARIO EN MODO EDICIÓN ---
+            // --- Lógica para poblar formulario ---
             if (isEditMode && companyData.plan) {
                 const plan = companyData.plan;
                 const demoFields = modal.querySelector('#demo-form-fields');
                 const proFields = modal.querySelector('#pro-form-fields');
 
-                // 1. Seleccionar la TAB (Demo o Pro)
                 if (plan.type === 'demo') {
                     modal.querySelector('#plan-type-demo').checked = true;
                     demoFields.style.display = 'block';
                     proFields.style.display = 'none';
-
-                    // 2. Poblar campos DEMO
                     modal.querySelector('#demo-duration').value = plan.duration || '7d';
                     
-                    // Poblar límite de cobradores (Demo)
                     const demoLimitSelect = modal.querySelector('#demo-collector-limit');
-                    // Usamos 'collectorLimitType' si existe, si no, el número.
                     const demoLimitType = plan.collectorLimitType || plan.collectorLimit?.toString();
                     
                     if (demoLimitSelect.querySelector(`option[value="${demoLimitType}"]`)) {
                         demoLimitSelect.value = demoLimitType;
-                    } else if (demoLimitType) { // Si no está en la lista, es 'custom'
+                    } else if (demoLimitType) {
                         demoLimitSelect.value = 'custom';
                         modal.querySelector('#demo-custom-limit-group').style.display = 'block';
                         modal.querySelector('#demo-custom-collector-limit').value = plan.collectorLimit || 0;
@@ -1143,121 +1148,102 @@
                     modal.querySelector('#plan-type-pro').checked = true;
                     demoFields.style.display = 'none';
                     proFields.style.display = 'block';
-
-                    // 2. Poblar campos PRO
                     modal.querySelector('#pro-plan-type').value = plan.plan || '1m';
                     modal.querySelector('#pro-plan-value').value = plan.value || 0;
 
-                    // Poblar límite de cobradores (Pro)
                     const proLimitSelect = modal.querySelector('#pro-collector-limit');
                     const proLimitType = plan.collectorLimitType || plan.collectorLimit?.toString();
 
                     if (proLimitSelect.querySelector(`option[value="${proLimitType}"]`)) {
                         proLimitSelect.value = proLimitType;
-                    } else if (proLimitType) { // Si no está en la lista, es 'custom'
+                    } else if (proLimitType) {
                         proLimitSelect.value = 'custom';
                         modal.querySelector('#pro-custom-limit-group').style.display = 'block';
                         modal.querySelector('#pro-custom-collector-limit').value = plan.collectorLimit || 0;
                     }
                 }
             }
-            // --- FIN: NUEVO BLOQUE DE PRE-SELECCIÓN ---
 
-            // --- Event Listeners del Modal ---
             modal.querySelector('#closeCompanyFormModal').addEventListener('click', () => window.history.back());
 
-            // --- NUEVOS Listeners para Lógica de Formulario ---
-        // Definimos las variables de campos SIEMPRE
-        const demoFields = modal.querySelector('#demo-form-fields');
-        const proFields = modal.querySelector('#pro-form-fields');
+            // --- Listeners de UI ---
+            const demoFields = modal.querySelector('#demo-form-fields');
+            const proFields = modal.querySelector('#pro-form-fields');
 
-        if (!isEditMode) {
-            // Mostrar campos Demo por defecto (SOLO en modo creación)
-            demoFields.style.display = 'block';
-        }
+            if (!isEditMode) {
+                demoFields.style.display = 'block';
+            }
 
-        // Listener para tabs DEMO/PRO (AHORA SIEMPRE ACTIVO)
-        // Esto arregla el problema en Modo Edición
-        modal.querySelectorAll('input[name="plan-type"]').forEach(radio => {
-            radio.addEventListener('change', (e) => {
-                if (e.target.value === 'demo') {
-                    demoFields.style.display = 'block';
-                    proFields.style.display = 'none';
-                } else {
-                    demoFields.style.display = 'none';
-                    proFields.style.display = 'block';
-                }
+            modal.querySelectorAll('input[name="plan-type"]').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    if (e.target.value === 'demo') {
+                        demoFields.style.display = 'block';
+                        proFields.style.display = 'none';
+                    } else {
+                        demoFields.style.display = 'none';
+                        proFields.style.display = 'block';
+                    }
+                });
             });
-        });
 
-        // Listener para Límite de Cobradores (AHORA SIEMPRE ACTIVO)
-        modal.querySelectorAll('.collector-limit-select').forEach(select => {
-            select.addEventListener('change', (e) => {
-                const isDemo = e.target.id === 'demo-collector-limit';
-                const customGroup = modal.querySelector(isDemo ? '#demo-custom-limit-group' : '#pro-custom-limit-group');
-                const customInput = modal.querySelector(isDemo ? '#demo-custom-collector-limit' : '#pro-custom-collector-limit');
-                if (e.target.value === 'custom') {
-                    customGroup.style.display = 'block';
-                    customInput.required = true; // Hace requerido el campo personalizado
-                } else {
-                    customGroup.style.display = 'none';
-                    customInput.required = false; // No es requerido si no es custom
-                    customInput.value = ''; // Limpia el valor si se cambia
-                }
+            modal.querySelectorAll('.collector-limit-select').forEach(select => {
+                select.addEventListener('change', (e) => {
+                    const isDemo = e.target.id === 'demo-collector-limit';
+                    const customGroup = modal.querySelector(isDemo ? '#demo-custom-limit-group' : '#pro-custom-limit-group');
+                    const customInput = modal.querySelector(isDemo ? '#demo-custom-collector-limit' : '#pro-custom-collector-limit');
+                    if (e.target.value === 'custom') {
+                        customGroup.style.display = 'block';
+                        customInput.required = true;
+                    } else {
+                        customGroup.style.display = 'none';
+                        customInput.required = false;
+                        customInput.value = '';
+                    }
+                });
             });
-        });
-        // --- FIN NUEVOS Listeners ---
 
-
-            // --- Listener de Guardado (ACTUALIZADO) ---
+            // --- LISTENER DE GUARDADO PRINCIPAL ---
             modal.querySelector('#saveCompanyBtn').addEventListener('click', async (e) => {
                 const saveButton = e.currentTarget;
                 const originalButtonHTML = saveButton.innerHTML;
 
-                // 1. Recolectar datos COMUNES
                 const companyName = document.getElementById('company-name').value.trim();
-                const ownerName = document.getElementById('owner-name').value.trim(); // NUEVO
-                const ownerDocument = document.getElementById('owner-document').value.trim(); // NUEVO
-                const ownerWhatsapp = document.getElementById('owner-whatsapp').value.trim(); // NUEVO
-                const companyCity = document.getElementById('company-city').value.trim(); // NUEVO
+                const ownerName = document.getElementById('owner-name').value.trim();
+                const ownerDocument = document.getElementById('owner-document').value.trim();
+                const ownerWhatsapp = document.getElementById('owner-whatsapp').value.trim();
+                const companyCity = document.getElementById('company-city').value.trim();
                 const currency = document.getElementById('company-currency').value || 'BRL';
-                const requireGps = false; // Hardcoded por ahora
+                const requireGps = false;
 
                 const adminEmailInput = document.getElementById('admin-email');
                 const adminPasswordInput = document.getElementById('admin-password');
                 const adminEmail = adminEmailInput ? adminEmailInput.value.trim() : null;
                 const adminPassword = adminPasswordInput ? adminPasswordInput.value : null;
 
-                // Validaciones básicas (incluyendo nuevos campos)
-                if (!companyName || !ownerName || !ownerDocument || !ownerWhatsapp || !companyCity) { // NUEVA VALIDACIÓN
+                if (!companyName || !ownerName || !ownerDocument || !ownerWhatsapp || !companyCity) {
                     showToast('Preencha todos os dados da empresa e do proprietário.', true); return;
                 }
-                if (!isEditMode && (!adminEmail || !adminPassword || adminPassword.length < 6)) {
-                    showToast('Email e senha (mín. 6 caracteres) para o admin são obrigatórios.', true); return;
+                
+                // Validación: Email siempre requerido. Password requerido solo en creación.
+                if (!adminEmail) {
+                    showToast('O email do administrador é obrigatório.', true); return;
+                }
+                if (!isEditMode && (!adminPassword || adminPassword.length < 6)) {
+                    showToast('Senha (mín. 6 caracteres) é obrigatória na criação.', true); return;
                 }
 
-                // Deshabilita botón y muestra carga
                 saveButton.disabled = true;
                 saveButton.innerHTML = `<i data-lucide="loader-circle" style="animation: spin 1s linear infinite;"></i> ${isEditMode ? 'Salvando...' : 'Criando...'}`;
                 lucide.createIcons({ nodes: [saveButton.querySelector('i')] });
 
-                // 2. Preparar datos
-                const companySettings = { currency, requireGps }; // Eliminado defaultInterest
-                const ownerData = { // NUEVO objeto para datos del propietario
-                    name: ownerName,
-                    document: ownerDocument,
-                    whatsapp: ownerWhatsapp
-                };
-                let companyPlan = {}; // Objeto de plan vacío
+                const companySettings = { currency, requireGps };
+                const ownerData = { name: ownerName, document: ownerDocument, whatsapp: ownerWhatsapp };
+                let companyPlan = {};
 
-                
                 try {
-                    // --- Lógica de Creación (NUEVA LÓGICA DE PLAN) ---
-                    // RECOLECTAMOS EL PLAN SIEMPRE, tanto en creación como en edición
                     const accountType = modal.querySelector('input[name="plan-type"]:checked').value;
-                    let collectorLimit = 0; // Inicializa
-                    let collectorLimitType = ''; // Inicializa
-                    companyPlan = {}; // Objeto de plan vacío (ya estaba definido arriba)
+                    let collectorLimit = 0;
+                    let collectorLimitType = '';
 
                     if (accountType === 'demo') {
                         const duration = modal.querySelector('#demo-duration').value;
@@ -1276,11 +1262,11 @@
 
                         companyPlan = {
                             type: 'demo',
-                            duration: duration, // Guarda '1d', '2d', etc.
+                            duration: duration,
                             text: `Demo (${modal.querySelector('#demo-duration option:checked').text})`,
                             collectorLimit: collectorLimit,
-                            collectorLimitType: collectorLimitType, // Guarda '1', '3', '5' o 'custom'
-                            value: 0, // Demos no tienen valor
+                            collectorLimitType: collectorLimitType,
+                            value: 0,
                             currency: currency
                         };
 
@@ -1292,7 +1278,7 @@
                         const limitSelect = modal.querySelector('#pro-collector-limit');
                         collectorLimitType = limitSelect.value;
 
-                        if (isNaN(planValue) || planValue < 0) { // Permitimos valor 0
+                        if (isNaN(planValue) || planValue < 0) {
                             showToast('Valor do plano inválido.', true);
                             saveButton.disabled = false; saveButton.innerHTML = originalButtonHTML; return;
                         }
@@ -1309,150 +1295,132 @@
 
                         companyPlan = {
                             type: 'pro',
-                            plan: planType, // Guarda '1m', '3m', etc.
+                            plan: planType,
                             text: `PRO (${planText})`,
                             collectorLimit: collectorLimit,
-                            collectorLimitType: collectorLimitType, // Guarda '1', '3', '5' o 'custom'
+                            collectorLimitType: collectorLimitType,
                             value: planValue,
                             currency: currency
                         };
                     }
 
-                    // Validar que se haya seleccionado un plan
-                    if (!companyPlan.type) {
-                        throw new Error('Erro ao processar o tipo de plano.');
-                    }
-
+                    if (!companyPlan.type) throw new Error('Erro ao processar o tipo de plano.');
 
                     if (isEditMode) {
-                        // --- INICIO: LÓGICA DE EDIÇÃO ATUALIZADA ---
-                        console.log("Modo Edição - Atualizando plano...");
+                        // --- MODO EDICIÓN ---
+                        console.log("Modo Edição...");
 
-                        // --- INICIO: LÓGICA DE DATA DE VENCIMENTO (CORRIGIDA) ---
-                        // Comparamos o plano antigo (companyData.plan.type) com o novo (companyPlan.type)
-                        
+                        // 1. VERIFICAR CAMBIO DE CONTRASEÑA
+                        if (adminPassword) {
+                            if (adminPassword.length < 6) {
+                                showToast('A nova senha deve ter no mínimo 6 caracteres.', true);
+                                saveButton.disabled = false; saveButton.innerHTML = originalButtonHTML; return;
+                            }
+
+                            console.log("Detectada alteração de senha. Chamando Cloud Function...");
+                            showToast("Atualizando senha...", false);
+
+                            if (!auth.currentUser) throw new Error("Super Admin não autenticado.");
+                            const idToken = await auth.currentUser.getIdToken(true);
+
+                            const authUrl = "https://us-central1-lumix-financas-app.cloudfunctions.net/updateCompanyAuth";
+                            
+                            const authResponse = await fetch(authUrl, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
+                                body: JSON.stringify({ 
+                                    data: { 
+                                        adminEmail: adminEmail, 
+                                        newPassword: adminPassword 
+                                    } 
+                                })
+                            });
+
+                            if (!authResponse.ok) {
+                                const errorData = await authResponse.json().catch(() => ({}));
+                                console.error("Erro na Cloud Function de senha:", errorData);
+                                showToast(`Erro ao alterar senha: ${errorData.error?.message || 'Erro desconhecido'}`, true);
+                            } else {
+                                showToast("Senha alterada com sucesso!");
+                            }
+                        }
+
+                        // 2. Lógica de Fechas y Plan
                         const oldPlanType = companyData.plan?.type || 'pro';
                         const newPlanType = companyPlan.type;
 
                         if (oldPlanType === 'demo' && newPlanType === 'pro') {
-                            // *** CENÁRIO 1: UPGRADE (DEMO -> PRO) ***
-                            // O plano é reiniciado HOJE. Recalculamos a data de vencimento.
-                            console.log("Detectado UPGRADE de DEMO para PRO. Reiniciando data de vencimento...");
-                            
+                            console.log("Upgrade DEMO -> PRO. Reiniciando datas...");
                             const now = new Date();
                             let newPlanEndDate = new Date(now);
-                            const planDuration = companyPlan.plan || '1m'; // '1m', '3m', '1y', etc.
+                            const planDuration = companyPlan.plan || '1m';
                             const durationValue = parseInt(planDuration.slice(0, -1)) || 1;
                             const durationUnit = planDuration.slice(-1);
 
-                            if (durationUnit === 'm') {
-                                newPlanEndDate.setMonth(newPlanEndDate.getMonth() + durationValue);
-                            } else if (durationUnit === 'y') {
-                                newPlanEndDate.setFullYear(newPlanEndDate.getFullYear() + durationValue);
-                            }
+                            if (durationUnit === 'm') newPlanEndDate.setMonth(newPlanEndDate.getMonth() + durationValue);
+                            else if (durationUnit === 'y') newPlanEndDate.setFullYear(newPlanEndDate.getFullYear() + durationValue);
                             
-                            // Atribui a NOVA data de vencimento
                             companyPlan.endDate = Timestamp.fromDate(newPlanEndDate); 
-
                         } else {
-                            // *** CENÁRIO 2: EDITANDO (PRO -> PRO) ou (DEMO -> DEMO) ***
-                            // Mantemos a data de vencimento original.
-                            console.log("Mantendo data de vencimento original.");
                             companyPlan.endDate = companyData.plan.endDate;
                         }
-                        // --- FIN: LÓGICA DE DATA DE VENCIMENTO (CORRIGIDA) ---
-                         
 
-                        // 2. Actualizar el documento en Firestore
-                        console.log("Atualizando Firestore com o novo plano:", companyPlan);
+                        // 3. Actualizar Firestore
+                        // IMPORTANTE: Ahora guardamos 'adminEmail' explícitamente.
+                        console.log("Atualizando Firestore com o novo plano e email:", adminEmail);
                         await updateDoc(doc(db, 'companies', companyId), {
                             name: companyName,
                             owner: ownerData,
                             city: companyCity,
-                            plan: companyPlan // Guarda el objeto de plan completo y actualizado
-                            // 'settings' (moneda) no se cambia en modo edición
+                            plan: companyPlan,
+                            adminEmail: adminEmail 
                         });
                         
                         showToast('Empresa atualizada com sucesso!');
-                        window.history.back(); // Cierra el modal
-                        // --- FIN: NUEVA LÓGICA DE EDICIÓN ---
+                        window.history.back();
 
                     } else {
-                        // --- Lógica de Creación (esta es la que ya tenías) ---
+                        // --- MODO CREACIÓN (Original) ---
                         const companyBaseData = {
                             name: companyName,
-                            owner: ownerData, // Incluye datos del propietario
-                            city: companyCity, // Incluye ciudad
+                            owner: ownerData,
+                            city: companyCity,
                             settings: companySettings,
-                            plan: companyPlan // Envía el objeto de plan estructurado
+                            plan: companyPlan
                         };
 
-                        // --- Llamada a Cloud Function (sin cambios en la llamada, solo en 'dataToSend') ---
                         console.log("Modo Criação - Chamando Cloud Function...");
-                        try {
-                            if (!auth.currentUser) throw new Error("Usuário Super Admin não autenticado.");
+                        if (!auth.currentUser) throw new Error("Usuário Super Admin não autenticado.");
+                        const idToken = await auth.currentUser.getIdToken(true);
+                        const functionUrl = "https://us-central1-lumix-financas-app.cloudfunctions.net/createCompanyAndAdmin";
 
-                            console.log("Forçando obtención/refresco del token ID...");
-                            const idToken = await auth.currentUser.getIdToken(true); // <-- CORRECCIÓN APLICADA AQUÍ
-                            console.log("Token ID obtenido/refrescado.");
+                        const dataToSend = {
+                            companyData: companyBaseData,
+                            adminEmail: adminEmail,
+                            adminPassword: adminPassword
+                        };
 
-                            const functionUrl = "https://us-central1-lumix-financas-app.cloudfunctions.net/createCompanyAndAdmin";
+                        const response = await fetch(functionUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
+                            body: JSON.stringify({ data: dataToSend })
+                        });
 
-                            const dataToSend = {
-                                companyData: companyBaseData, // Envía el nuevo objeto con plan detallado y owner
-                                adminEmail: adminEmail,
-                                adminPassword: adminPassword
-                            };
+                        if (!response.ok) {
+                            const errorData = await response.json().catch(() => ({}));
+                            throw new Error(errorData.error?.message || `Error HTTP ${response.status}`);
+                        }
 
-                            console.log("Datos a enviar (limpios):", JSON.stringify(dataToSend));
-
-                            const response = await fetch(functionUrl, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Authorization': `Bearer ${idToken}`
-                                },
-                                body: JSON.stringify({ data: dataToSend })
-                            });
-
-                            if (!response.ok) {
-                                const errorData = await response.json().catch(() => ({}));
-                                const errorMessage = errorData.error?.message || `Error HTTP ${response.status}: ${response.statusText}`;
-                                throw new Error(errorMessage);
-                            }
-
-                            const resultWrapper = await response.json();
-                            if (resultWrapper.error) throw new Error(resultWrapper.error.message);
-
-                            const result = resultWrapper.result;
-                            console.log("Resultado da Cloud Function:", result);
-
-                            if (result.success) {
-                                showToast(`Empresa "${companyName}" e Admin criados com sucesso!`);
-                                window.history.back(); // <-- CORRECCIÓN APLICADA AQUÍ
-                            } else {
-                                throw new Error(result.error || 'Erro desconhecido retornado pela Cloud Function.');
-                            }
-
-                        } catch (functionError) {
-                            console.error("Erro ao chamar/executar a Cloud Function:", functionError);
-                            showToast(`Erro ao criar empresa: ${functionError.message}`, true);
-                            // Log completo para depuración
-                            console.log("Detalles completos del Error:", functionError);
-                        } finally {
-                             // Reactiva el botón SOLO SI HUBO ERROR en la función
-                             // Corrección: Reactivar siempre, pero SÓLO si no se cerró el modal
-                             if (document.getElementById('companyFormModal').classList.contains('active')) {
-                                saveButton.disabled = false;
-                                saveButton.innerHTML = originalButtonHTML;
-                                if (document.body.contains(saveButton)) {
-                                    lucide.createIcons({ nodes: [saveButton.querySelector('i')] });
-                                }
-                             }
+                        const resultWrapper = await response.json();
+                        if (resultWrapper.result.success) {
+                            showToast(`Empresa "${companyName}" e Admin criados com sucesso!`);
+                            window.history.back();
+                        } else {
+                            throw new Error(resultWrapper.error || 'Erro desconhecido.');
                         }
                     }
                 } catch (generalError) {
-                    console.error("Error general en saveCompanyBtn:", generalError);
+                    console.error("Error general:", generalError);
                     showToast(`Error: ${generalError.message}`, true);
                     saveButton.disabled = false;
                     saveButton.innerHTML = originalButtonHTML;
@@ -1460,97 +1428,56 @@
                          lucide.createIcons({ nodes: [saveButton.querySelector('i')] });
                     }
                 }
-
-            }); // <-- Este es el cierre del listener de #saveCompanyBtn
-
-            
-            // --- NUEVO: Listener para el Botón de Eliminar (VERSIÓN DE DIAGNÓSTICO) ---
-            
-            if (isEditMode) {
-            const suspendButton = modal.querySelector('#suspendCompanyBtn');
-
-            // Asumimos 'active' si el campo 'status' no existe (para empresas antiguas)
-            let currentStatus = companyData.status || 'active'; 
-
-            // 1. Configurar el estado inicial del botón (texto, icono y color)
-            const updateButtonState = (status) => {
-                if (status === 'active') {
-                    suspendButton.innerHTML = `<i data-lucide="pause-circle"></i> Suspender Empresa`;
-                    suspendButton.style.color = 'var(--warning-color)';
-                    suspendButton.style.borderColor = 'var(--warning-color)';
-                    suspendButton.style.background = 'transparent'; // Asegura fondo transparente
-                } else { // 'suspended'
-                    suspendButton.innerHTML = `<i data-lucide="play-circle"></i> Reativar Empresa`;
-                    suspendButton.style.color = 'var(--accent-blue)'; // Azul para reactivar
-                    suspendButton.style.borderColor = 'var(--accent-blue)';
-                    suspendButton.style.background = 'transparent'; // Asegura fondo transparente
-                }
-                lucide.createIcons({ nodes: [suspendButton.querySelector('i')] });
-            };
-
-            updateButtonState(currentStatus); // Llama al inicio para configurar el botón
-
-            // 2. Añadir el listener de clic
-            suspendButton.addEventListener('click', async (e) => {
-                // Volvemos a leer el status actual (puede haber cambiado)
-                const newStatus = currentStatus === 'active' ? 'suspended' : 'active';
-                const actionText = newStatus === 'suspended' ? 'Suspender' : 'Reativar';
-
-                const confirmed = await showConfirmationModal(
-                    `¿${actionText} Empresa?`,
-                    `¿Estás seguro de que deseas ${actionText.toLowerCase()} a "${companyData.name}"?`,
-                    `Sim, ${actionText}`,
-                    newStatus === 'suspended' ? 'btn-danger' : 'btn-primary' // Rojo para suspender, Azul para reactivar
-                );
-
-                if (!confirmed) return;
-
-                const originalButtonHTML = suspendButton.innerHTML;
-                suspendButton.disabled = true;
-                suspendButton.innerHTML = `<i data-lucide="loader-circle" style="animation: spin 1s linear infinite;"></i> Processando...`;
-                lucide.createIcons({ nodes: [suspendButton.querySelector('i')] });
-
-                try {
-                    // 3. Actualizar Firestore
-                    const companyRef = doc(db, 'companies', companyId);
-                    await updateDoc(companyRef, {
-                        status: newStatus
-                    });
-
-                    // 4. Éxito
-                    showToast(`Empresa ${newStatus === 'suspended' ? 'suspensa' : 'reativada'} com sucesso!`);
-
-                    // 5. Actualizar estado local y el botón (sin cerrar el modal)
-                    currentStatus = newStatus; // Actualiza el estado local
-                    companyData.status = newStatus; // Actualiza el objeto de datos principal
-                    updateButtonState(currentStatus); // Actualiza la UI del botón
-
-                    suspendButton.disabled = false;
-
-                    // onSnapshot se encargará de actualizar la lista principal.
-
-                } catch (error) {
-                    console.error("Erro ao atualizar status da empresa:", error);
-                    showToast(`Erro ao ${actionText.toLowerCase()}: ${error.message}`, true);
-                    suspendButton.disabled = false;
-                    // Restaura el HTML original (antes del 'loading')
-                    suspendButton.innerHTML = originalButtonHTML;
-                    lucide.createIcons({ nodes: [suspendButton.querySelector('i')] });
-                }
             });
+
+            // Lógica del botón suspender (solo edición)
+            if (isEditMode) {
+                const suspendButton = modal.querySelector('#suspendCompanyBtn');
+                let currentStatus = companyData.status || 'active'; 
+
+                const updateButtonState = (status) => {
+                    if (status === 'active') {
+                        suspendButton.innerHTML = `<i data-lucide="pause-circle"></i> Suspender Empresa`;
+                        suspendButton.style.color = 'var(--warning-color)';
+                        suspendButton.style.borderColor = 'var(--warning-color)';
+                    } else {
+                        suspendButton.innerHTML = `<i data-lucide="play-circle"></i> Reativar Empresa`;
+                        suspendButton.style.color = 'var(--accent-blue)';
+                        suspendButton.style.borderColor = 'var(--accent-blue)';
+                    }
+                    lucide.createIcons({ nodes: [suspendButton.querySelector('i')] });
+                };
+                updateButtonState(currentStatus);
+
+                suspendButton.addEventListener('click', async (e) => {
+                    const newStatus = currentStatus === 'active' ? 'suspended' : 'active';
+                    const actionText = newStatus === 'suspended' ? 'Suspender' : 'Reativar';
+                    const confirmed = await showConfirmationModal(`¿${actionText} Empresa?`, `¿Estás seguro de que deseas ${actionText.toLowerCase()} a "${companyData.name}"?`, `Sim, ${actionText}`, newStatus === 'suspended' ? 'btn-danger' : 'btn-primary');
+
+                    if (!confirmed) return;
+
+                    const originalButtonHTML = suspendButton.innerHTML;
+                    suspendButton.disabled = true;
+                    suspendButton.innerHTML = `<i data-lucide="loader-circle" style="animation: spin 1s linear infinite;"></i> Processando...`;
+                    lucide.createIcons({ nodes: [suspendButton.querySelector('i')] });
+
+                    try {
+                        await updateDoc(doc(db, 'companies', companyId), { status: newStatus });
+                        showToast(`Empresa ${newStatus === 'suspended' ? 'suspensa' : 'reativada'} com sucesso!`);
+                        currentStatus = newStatus;
+                        updateButtonState(currentStatus);
+                        suspendButton.disabled = false;
+                    } catch (error) {
+                        console.error("Erro ao atualizar status:", error);
+                        showToast(`Erro ao ${actionText.toLowerCase()}: ${error.message}`, true);
+                        suspendButton.disabled = false;
+                        suspendButton.innerHTML = originalButtonHTML;
+                        lucide.createIcons({ nodes: [suspendButton.querySelector('i')] });
+                    }
+                });
+            }
         }
-        // --- FIN NUEVO LISTENER ---
 
-
-
-            // --- FIN NUEVO LISTENER (DIAGNÓSTICO) ---
-
-
-            // Listener popstate (sin cambios)
-
-
-            
-        } // Fin showCompanyFormModal
 
         // --- Event Listeners Globales ---
         function setupSuperAdminEventListeners() {
@@ -1792,3 +1719,4 @@
     </script>
 </body>
 </html>
+
