@@ -548,7 +548,7 @@
         // Importa Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, getIdToken } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js"; // Añadido getIdToken
-        import { getFirestore, collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, serverTimestamp, Timestamp, writeBatch } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-functions.js";
 
         // --- Configuración de Firebase (Usa la MISMA que tus otras apps) ---
@@ -718,15 +718,96 @@
         }
         // --- FIN: NUEVA Función ---
 
+
+        // --- FUNCIÓN DE SUSPENSIÓN AUTOMÁTICA ---
+        async function checkAndSuspendExpiredCompanies() {
+            console.log("Verificando vencimientos de empresas...");
+            const now = new Date();
+            const batch = writeBatch(db); // Prepara un paquete de actualizaciones
+            let suspendedCount = 0;
+            let changesDetected = false;
+
+            allCompanies.forEach(company => {
+                // Si ya está suspendida o es el propio Super Admin (opcional), saltar
+                if (company.status === 'suspended') return;
+
+                let endDate = null;
+
+                // 1. Intentar obtener fecha de fin explícita (si ya se guardó)
+                // Buscamos en company.plan.endDate o company.planEndDate por compatibilidad
+                const storedEndDate = company.plan?.endDate || company.planEndDate;
+                
+                if (storedEndDate?.seconds) {
+                    endDate = new Date(storedEndDate.seconds * 1000);
+                } 
+                // 2. Si no hay fecha guardada, CALCULARLA basándose en creación + plan
+                else if (company.createdAt?.seconds && company.plan) {
+                    const startDate = new Date(company.createdAt.seconds * 1000);
+                    const plan = company.plan;
+                    endDate = new Date(startDate); // Clonamos fecha inicio
+
+                    // Cálculo para DEMO (Días)
+                    if (plan.type === 'demo' && plan.duration) {
+                        const days = parseInt(plan.duration.replace('d', '')) || 0;
+                        endDate.setDate(endDate.getDate() + days);
+                    } 
+                    // Cálculo para PRO (Meses)
+                    else if (plan.type === 'pro' && plan.plan) {
+                        const durationMap = { '1m': 1, '3m': 3, '6m': 6, '1y': 12 };
+                        const months = durationMap[plan.plan] || 0;
+                        endDate.setMonth(endDate.getMonth() + months);
+                    } else {
+                        // Si no se puede determinar el plan, no hacemos nada por seguridad
+                        endDate = null;
+                    }
+                }
+
+                // 3. Evaluar Vencimiento
+                if (endDate) {
+                    // Ponemos endDate al final del día para dar margen (23:59:59)
+                    // O lo dejamos exacto. Si quieres ser estricto: endDate < now.
+                    // Si la fecha de vencimiento ya pasó hoy:
+                    if (endDate < now) {
+                        console.log(`SUSPENDIENDO: ${company.name}. Venció: ${endDate.toLocaleDateString()}`);
+                        const companyRef = doc(db, 'companies', company.id);
+                        batch.update(companyRef, { status: 'suspended' });
+                        suspendedCount++;
+                        changesDetected = true;
+                    }
+                }
+            });
+
+            // 4. Ejecutar cambios en la base de datos
+            if (changesDetected) {
+                try {
+                    await batch.commit();
+                    showToast(`${suspendedCount} contas vencidas foram suspensas automaticamente.`, true); // Usamos true para rojo/alerta
+                    console.log(`Proceso completado: ${suspendedCount} empresas suspendidas.`);
+                } catch (error) {
+                    console.error("Error al suspender cuentas automáticamente:", error);
+                }
+            } else {
+                console.log("Ninguna cuenta vencida pendiente de suspensión.");
+            }
+        }
+
+
+
+
         function loadCompanies() {
             const listContainer = document.getElementById('companies-list');
-            listContainer.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 20px;">Cargando...</p>'; // Indicador de carga mejorado
+            listContainer.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 20px;">Cargando...</p>';
 
             // Escucha la colección /companies
             onSnapshot(collection(db, 'companies'), (snapshot) => {
                 allCompanies = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                // ANTERIOR: renderCompaniesList();
-                filterAndRenderCompanies(); // <-- NUEVA LLAMADA
+                
+                // 1. Ejecutar verificación de vencimientos AUTOMÁTICAMENTE
+                checkAndSuspendExpiredCompanies();
+
+                // 2. Renderizar la lista
+                filterAndRenderCompanies(); 
+                
             }, (error) => {
                 console.error("Error al cargar empresas:", error);
                 listContainer.innerHTML = '<p style="text-align: center; color: var(--danger-color); padding: 20px;">Error al cargar datos.</p>';
@@ -1719,4 +1800,5 @@
     </script>
 </body>
 </html>
+
 
