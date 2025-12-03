@@ -995,6 +995,7 @@
         }
         // --- FIN Helper ---
 
+        
         function showCompanyFormModal(companyId = null) {
             const isEditMode = companyId !== null;
             const companyData = isEditMode ? allCompanies.find(c => c.id === companyId) : {}; 
@@ -1006,9 +1007,7 @@
             const saveButtonText = isEditMode ? 'Salvar Alterações' : 'Criar Empresa e Admin';
 
             // --- Lógica inteligente para el Email ---
-            // Buscamos el email en varios lugares posibles. Si no existe, permitiremos editarlo.
             const existingEmail = isEditMode ? (companyData.adminEmail || companyData.email || companyData.owner?.email || '') : '';
-            // Solo bloqueamos el campo si REALMENTE tenemos un email guardado
             const isEmailLocked = isEditMode && existingEmail.length > 0;
 
             // --- Opciones para los selects ---
@@ -1143,18 +1142,13 @@
                         </div>
                         
 
-                        <!-- SECCIÓN DE CREDENCIALES (MODIFICADA) -->
+                        <!-- SECCIÓN DE CREDENCIALES -->
                         <h3 class="section-title" style="margin-top: 30px; font-size: 1.1em;">
                             ${isEditMode ? 'Credenciais de Acesso (Admin)' : 'Dados do Administrador Principal'}
                         </h3>
                         
                         <div class="form-group">
                             <label for="admin-email">Email do Admin</label>
-                            <!-- 
-                                CORRECCIÓN: 
-                                Si 'isEmailLocked' es true (tenemos email), es readonly y gris.
-                                Si es false (no hay email guardado), es editable y blanco para que lo corrijas.
-                            -->
                             <input type="email" id="admin-email" 
                                    value="${existingEmail}" 
                                    placeholder="${isEditMode ? 'Digite o email do admin para corrigir o registro' : 'email@exemplo.com'}"
@@ -1305,7 +1299,6 @@
                     showToast('Preencha todos os dados da empresa e do proprietário.', true); return;
                 }
                 
-                // Validación: Email siempre requerido. Password requerido solo en creación.
                 if (!adminEmail) {
                     showToast('O email do administrador é obrigatório.', true); return;
                 }
@@ -1391,7 +1384,6 @@
                         // --- MODO EDICIÓN ---
                         console.log("Modo Edição...");
 
-                        // 1. VERIFICAR CAMBIO DE CONTRASEÑA
                         if (adminPassword) {
                             if (adminPassword.length < 6) {
                                 showToast('A nova senha deve ter no mínimo 6 caracteres.', true);
@@ -1426,7 +1418,6 @@
                             }
                         }
 
-                        // 2. Lógica de Fechas y Plan
                         const oldPlanType = companyData.plan?.type || 'pro';
                         const newPlanType = companyPlan.type;
 
@@ -1446,8 +1437,6 @@
                             companyPlan.endDate = companyData.plan.endDate;
                         }
 
-                        // 3. Actualizar Firestore
-                        // IMPORTANTE: Ahora guardamos 'adminEmail' explícitamente.
                         console.log("Atualizando Firestore com o novo plano e email:", adminEmail);
                         await updateDoc(doc(db, 'companies', companyId), {
                             name: companyName,
@@ -1461,7 +1450,7 @@
                         window.history.back();
 
                     } else {
-                        // --- MODO CREACIÓN (Original) ---
+                        // --- MODO CREACIÓN ---
                         const companyBaseData = {
                             name: companyName,
                             owner: ownerData,
@@ -1511,11 +1500,13 @@
                 }
             });
 
-            // Lógica del botón suspender (solo edición)
+            // Lógica de los botones SUSPENDER y ELIMINAR (Solo edición)
             if (isEditMode) {
                 const suspendButton = modal.querySelector('#suspendCompanyBtn');
+                const deleteButton = modal.querySelector('#deleteCompanyBtn');
                 let currentStatus = companyData.status || 'active'; 
 
+                // --- LÓGICA BOTÓN SUSPENDER ---
                 const updateButtonState = (status) => {
                     if (status === 'active') {
                         suspendButton.innerHTML = `<i data-lucide="pause-circle"></i> Suspender Empresa`;
@@ -1556,6 +1547,44 @@
                         lucide.createIcons({ nodes: [suspendButton.querySelector('i')] });
                     }
                 });
+
+                // --- LÓGICA BOTÓN ELIMINAR (¡ACTIVADA!) ---
+                if (deleteButton) {
+                    deleteButton.addEventListener('click', async () => {
+                        // 1. Confirmación de Seguridad
+                        const confirmed = await showConfirmationModal(
+                            'Eliminar Empresa?',
+                            `ATENÇÃO: Você está prestes a excluir permanentemente a empresa "${companyData.name}". Isso removerá o acesso deste cliente ao painel e apagará seus dados da lista do Super Admin. Deseja continuar?`,
+                            'Sim, Excluir',
+                            'btn-danger'
+                        );
+
+                        if (!confirmed) return;
+
+                        // 2. Estado de carga visual
+                        const originalHTML = deleteButton.innerHTML;
+                        deleteButton.disabled = true;
+                        deleteButton.innerHTML = `<i data-lucide="loader-circle" style="animation: spin 1s linear infinite;"></i> Excluindo...`;
+                        lucide.createIcons({ nodes: [deleteButton.querySelector('i')] });
+
+                        try {
+                            // 3. Eliminar el documento de la colección 'companies'
+                            await deleteDoc(doc(db, 'companies', companyId));
+
+                            showToast('Empresa excluída com sucesso.');
+                            window.history.back(); // Cierra el modal
+
+                        } catch (error) {
+                            console.error("Erro ao excluir empresa:", error);
+                            showToast(`Erro ao excluir: ${error.message}`, true);
+                            
+                            // Restaurar botón en caso de error
+                            deleteButton.disabled = false;
+                            deleteButton.innerHTML = originalHTML;
+                            lucide.createIcons({ nodes: [deleteButton.querySelector('i')] });
+                        }
+                    });
+                }
             }
         }
 
