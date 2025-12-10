@@ -890,9 +890,9 @@
             const modalTitle = isEditMode ? 'Editar Empresa' : 'Registrar Nova Empresa Financeira';
             const saveButtonText = isEditMode ? 'Salvar Alterações' : 'Criar Empresa e Admin';
 
-            // --- Lógica inteligente para el Email ---
+            // --- CAMBIO 1: El email NUNCA se bloquea (isEmailLocked = false) ---
             const existingEmail = isEditMode ? (companyData.adminEmail || companyData.email || companyData.owner?.email || '') : '';
-            const isEmailLocked = isEditMode && existingEmail.length > 0;
+            const isEmailLocked = false; 
 
             // --- Opciones para los selects ---
             const demoDurationOptions = [
@@ -998,7 +998,7 @@
                             </div>
                         </div>
 
-                        <!-- Campos para PRO (MODIFICADO CON CALENDARIO) -->
+                        <!-- Campos para PRO -->
                         <div id="pro-form-fields" class="plan-fields-container">
                             <h3 class="section-title" style="margin-top: 30px; font-size: 1.1em;">Configurar PRO</h3>
                             <div class="form-group grid-2">
@@ -1014,7 +1014,6 @@
                                 </div>
                             </div>
 
-                            <!-- NUEVO: CAMPO DE FECHA DE VENCIMIENTO MANUAL -->
                             <div class="form-group" style="background-color: var(--bg); padding: 10px; border-radius: 8px; border: 1px dashed var(--accent-blue);">
                                 <label for="pro-manual-expiration" style="color: var(--accent-blue); font-weight: bold;">
                                     <i data-lucide="calendar-days" style="width: 14px; display: inline-block;"></i> Data de Vencimento (Ajuste Manual)
@@ -1024,7 +1023,6 @@
                                     Use apenas se precisar corrigir a data (ex: compensar dias de Demo). Deixe em branco para cálculo automático.
                                 </p>
                             </div>
-                            <!-- FIN NUEVO -->
 
                             <div class="form-group">
                                 <label for="pro-collector-limit">Limite de Cobradores</label>
@@ -1048,10 +1046,12 @@
                             <label for="admin-email">Email do Admin</label>
                             <input type="email" id="admin-email" 
                                    value="${existingEmail}" 
-                                   placeholder="${isEditMode ? 'Digite o email do admin para corrigir o registro' : 'email@exemplo.com'}"
-                                   ${isEmailLocked ? 'readonly style="background-color: var(--bg); opacity: 0.7;"' : 'required style="background-color: var(--surface); border-color: var(--accent-blue);"'} 
+                                   placeholder="${isEditMode ? 'Edite o email se necessário' : 'email@exemplo.com'}"
+                                   required style="background-color: var(--surface); border-color: var(--accent-blue);" 
                                    autocomplete="off">
-                            ${!isEmailLocked && isEditMode ? '<p style="color: var(--warning-color); font-size: 0.8em; margin-top: 5px;">⚠️ O email não foi encontrado. Por favor, insira-o manualmente para salvar.</p>' : ''}
+                            <p style="font-size: 0.8em; color: var(--text-secondary); margin-top: 5px;">
+                                ℹ️ Você pode corrigir este email se estiver errado.
+                            </p>
                         </div>
 
                         <div class="form-group">
@@ -1123,11 +1123,10 @@
                     modal.querySelector('#pro-plan-type').value = plan.plan || '1m';
                     modal.querySelector('#pro-plan-value').value = plan.value || 0;
 
-                    // NUEVO: Poner la fecha de vencimiento actual en el calendario
                     if (plan.endDate) {
                         try {
                             const endDate = new Date(plan.endDate.seconds * 1000);
-                            const isoDate = endDate.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+                            const isoDate = endDate.toISOString().split('T')[0]; 
                             modal.querySelector('#pro-manual-expiration').value = isoDate;
                         } catch(e) { console.error("Error parseando fecha", e); }
                     }
@@ -1295,8 +1294,6 @@
                                 showToast('A nova senha deve ter no mínimo 6 caracteres.', true);
                                 saveButton.disabled = false; saveButton.innerHTML = originalButtonHTML; return;
                             }
-
-                            // ... (Lógica de cambio de contraseña igual que antes) ...
                             console.log("Detectada alteração de senha...");
                             if (!auth.currentUser) throw new Error("Super Admin não autenticado.");
                             const idToken = await auth.currentUser.getIdToken(true);
@@ -1314,24 +1311,18 @@
                         let manualTimestamp = null;
                         
                         if (companyPlan.type === 'pro' && manualDateInput && manualDateInput.value) {
-                             // Si hay fecha manual seleccionada, la usamos
                              const [year, month, day] = manualDateInput.value.split('-').map(Number);
-                             // Creamos fecha a las 23:59:59 del día seleccionado
                              const manualDate = new Date(year, month - 1, day, 23, 59, 59);
                              manualTimestamp = Timestamp.fromDate(manualDate);
                         }
 
                         if (manualTimestamp) {
-                            // PRIORIDAD 1: Fecha Manual
-                            console.log("Aplicando fecha manual de vencimiento...");
                             companyPlan.endDate = manualTimestamp;
                         } else {
-                            // PRIORIDAD 2: Cálculo Automático o Mantener Anterior
                             const oldPlanType = companyData.plan?.type || 'pro';
                             const newPlanType = companyPlan.type;
 
                             if (oldPlanType === 'demo' && newPlanType === 'pro') {
-                                console.log("Upgrade DEMO -> PRO. Calculando fecha automática...");
                                 const now = new Date();
                                 let newPlanEndDate = new Date(now);
                                 const planDuration = companyPlan.plan || '1m';
@@ -1343,11 +1334,9 @@
                                 
                                 companyPlan.endDate = Timestamp.fromDate(newPlanEndDate); 
                             } else {
-                                // Mantenemos la fecha que ya tenía
                                 companyPlan.endDate = companyData.plan.endDate;
                             }
                         }
-                        // --- FIN LÓGICA DE FECHAS ---
 
                         console.log("Atualizando Firestore com o novo plano...");
                         await updateDoc(doc(db, 'companies', companyId), {
@@ -1363,7 +1352,6 @@
 
                     } else {
                         // --- MODO CREACIÓN ---
-                        // (Igual que antes, pero si quieres soportar fecha manual en creación, avísame)
                         const companyBaseData = {
                             name: companyName,
                             owner: ownerData,
@@ -1372,7 +1360,6 @@
                             plan: companyPlan
                         };
 
-                        // ... Llamada a Cloud Function igual que antes ...
                         if (!auth.currentUser) throw new Error("Usuário Super Admin não autenticado.");
                         const idToken = await auth.currentUser.getIdToken(true);
                         const functionUrl = "https://us-central1-lumix-financas-app.cloudfunctions.net/createCompanyAndAdmin";
@@ -1388,7 +1375,6 @@
                             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
                             body: JSON.stringify({ data: dataToSend })
                         });
-                        // ... manejo de respuesta igual ...
                         const resultWrapper = await response.json();
                         if (resultWrapper.result.success) {
                             showToast(`Empresa criada com sucesso!`);
@@ -1429,10 +1415,33 @@
                 };
                 updateButtonState(currentStatus);
 
+                // --- CAMBIO 2: Lógica de Reactivación con Días de Gracia ---
                 suspendButton.addEventListener('click', async (e) => {
                     const newStatus = currentStatus === 'active' ? 'suspended' : 'active';
                     const actionText = newStatus === 'suspended' ? 'Suspender' : 'Reativar';
-                    const confirmed = await showConfirmationModal(`¿${actionText} Empresa?`, `¿Estás seguro de que deseas ${actionText.toLowerCase()} a "${companyData.name}"?`, `Sim, ${actionText}`, newStatus === 'suspended' ? 'btn-danger' : 'btn-primary');
+                    
+                    // Verificar si está vencida
+                    let isExpired = false;
+                    const now = new Date();
+                    const endDateRef = companyData.plan?.endDate || companyData.planEndDate;
+                    if (newStatus === 'active' && endDateRef?.seconds) {
+                        const endDate = new Date(endDateRef.seconds * 1000);
+                        if (endDate < now) {
+                            isExpired = true;
+                        }
+                    }
+
+                    let confirmMsg = `¿Estás seguro de que deseas ${actionText.toLowerCase()} a "${companyData.name}"?`;
+                    if (isExpired) {
+                        confirmMsg += `\n\n⚠️ ATENÇÃO: Esta conta está VENCIDA. Ao reativar, o sistema adicionará automaticamente 2 DIAS DE CORTESIA para que ela não seja bloqueada novamente de imediato.`;
+                    }
+
+                    const confirmed = await showConfirmationModal(
+                        `¿${actionText} Empresa?`, 
+                        confirmMsg, 
+                        `Sim, ${actionText}`, 
+                        newStatus === 'suspended' ? 'btn-danger' : 'btn-primary'
+                    );
 
                     if (!confirmed) return;
 
@@ -1442,11 +1451,34 @@
                     lucide.createIcons({ nodes: [suspendButton.querySelector('i')] });
 
                     try {
-                        await updateDoc(doc(db, 'companies', companyId), { status: newStatus });
-                        showToast(`Empresa ${newStatus === 'suspended' ? 'suspensa' : 'reativada'} com sucesso!`);
+                        const updates = { status: newStatus };
+
+                        // Si reactivamos una cuenta vencida, extendemos la fecha 48 horas
+                        if (isExpired) {
+                            const graceDate = new Date();
+                            graceDate.setDate(graceDate.getDate() + 2); // +2 Días
+                            
+                            if (companyData.plan) {
+                                updates['plan.endDate'] = Timestamp.fromDate(graceDate);
+                            } else {
+                                updates['planEndDate'] = Timestamp.fromDate(graceDate);
+                            }
+                            console.log("Aplicando periodo de gracia de 2 días.");
+                        }
+
+                        await updateDoc(doc(db, 'companies', companyId), updates);
+                        
+                        let successMsg = `Empresa ${newStatus === 'suspended' ? 'suspensa' : 'reativada'} com sucesso!`;
+                        if (isExpired) successMsg += " (2 dias de cortesia adicionados)";
+                        
+                        showToast(successMsg);
                         currentStatus = newStatus;
                         updateButtonState(currentStatus);
                         suspendButton.disabled = false;
+                        
+                        // Opcional: Cerrar para refrescar la lista
+                        window.history.back();
+
                     } catch (error) {
                         console.error("Erro ao atualizar status:", error);
                         showToast(`Erro ao ${actionText.toLowerCase()}: ${error.message}`, true);
@@ -1832,6 +1864,7 @@
     </script>
 </body>
 </html>
+
 
 
 
