@@ -891,10 +891,8 @@
             const modalTitle = isEditMode ? 'Editar Empresa' : 'Registrar Nova Empresa Financeira';
             const saveButtonText = isEditMode ? 'Salvar Alterações' : 'Criar Empresa e Admin';
 
-            // --- CAMBIO 1: El email NUNCA se bloquea (isEmailLocked = false) ---
             const existingEmail = isEditMode ? (companyData.adminEmail || companyData.email || companyData.owner?.email || '') : '';
-            const isEmailLocked = false; 
-
+            
             // --- Opciones para los selects ---
             const demoDurationOptions = [
                 { value: '1d', text: '1 Dia' },
@@ -919,8 +917,14 @@
                 { value: 'custom', text: 'Personalizado' },
             ];
 
+            // Generamos las opciones de moneda
+            // Si estamos editando, tomamos la moneda guardada en settings.currency, o fallamos a BRL
+            const currentCurrency = (isEditMode && companyData.settings && companyData.settings.currency) 
+                                    ? companyData.settings.currency 
+                                    : 'BRL';
+
             const currencyOptions = Object.entries(CURRENCY_CONFIGS).map(([code, config]) => {
-                const selected = (companyData.settings?.currency || 'BRL') === code ? 'selected' : '';
+                const selected = currentCurrency === code ? 'selected' : '';
                 return `<option value="${code}" ${selected}>${config.country} (${config.symbol} ${code})</option>`;
             }).sort((a, b) => a.localeCompare(b)).join('');
 
@@ -961,7 +965,8 @@
                              </div>
                             <div>
                                 <label for="company-currency">Moeda Principal</label>
-                                <select id="company-currency" ${isEditMode ? 'disabled' : ''}> 
+                                <!-- CAMBIO: Eliminamos la condición 'disabled' para permitir cambios -->
+                                <select id="company-currency"> 
                                      ${currencyOptions}
                                 </select>
                             </div>
@@ -1307,7 +1312,6 @@
                             showToast("Senha alterada com sucesso!");
                         }
 
-                        // --- NUEVA LÓGICA DE FECHAS ---
                         const manualDateInput = document.getElementById('pro-manual-expiration');
                         let manualTimestamp = null;
                         
@@ -1339,13 +1343,14 @@
                             }
                         }
 
-                        console.log("Atualizando Firestore com o novo plano...");
+                        console.log("Atualizando Firestore com o novo plano y moneda...");
                         await updateDoc(doc(db, 'companies', companyId), {
                             name: companyName,
                             owner: ownerData,
                             city: companyCity,
                             plan: companyPlan,
-                            adminEmail: adminEmail 
+                            adminEmail: adminEmail,
+                            settings: companySettings // CAMBIO CRÍTICO: Aquí se guarda la nueva moneda
                         });
                         
                         showToast('Empresa atualizada com sucesso!');
@@ -1377,9 +1382,6 @@
                             body: JSON.stringify({ data: dataToSend })
                         });
                         const resultWrapper = await response.json();
-                        console.log("Respuesta del Servidor (Creación):", resultWrapper);
-
-                        // CORRECCIÓN DE SEGURIDAD
                         const resultData = resultWrapper.result || resultWrapper;
 
                         if (resultData && resultData.success) {
@@ -1389,23 +1391,15 @@
                             const errorMsg = resultWrapper.error?.message || resultWrapper.error || resultData.error || 'Erro desconhecido no servidor.';
                             throw new Error(errorMsg);
                         }
-                        
-                    } // Cierra el ELSE (Modo Creación)
+                    } 
 
-                } catch (generalError) { // Cierra el TRY y abre el CATCH
+                } catch (generalError) {
                     console.error("Error general:", generalError);
-                    
                     let msg = generalError.message;
-                    
-                    // --- TRADUCCIÓN DE ERRORES ---
-                    // Detectamos si el error es por email duplicado
                     if (msg && (msg.includes("email-already-in-use") || msg.includes("already in use") || msg.includes("email-already-exists"))) {
                         msg = "Este email já está registrado no sistema. Use outro email ou exclua o usuário no painel do Firebase Auth.";
                     }
-
                     showToast(`Erro: ${msg}`, true);
-                    
-                    // Restaurar botón
                     saveButton.disabled = false;
                     saveButton.innerHTML = originalButtonHTML;
                     if (document.body.contains(saveButton)) {
@@ -1435,12 +1429,10 @@
                 };
                 updateButtonState(currentStatus);
 
-                // --- CAMBIO 2: Lógica de Reactivación con Días de Gracia ---
                 suspendButton.addEventListener('click', async (e) => {
                     const newStatus = currentStatus === 'active' ? 'suspended' : 'active';
                     const actionText = newStatus === 'suspended' ? 'Suspender' : 'Reativar';
                     
-                    // Verificar si está vencida
                     let isExpired = false;
                     const now = new Date();
                     const endDateRef = companyData.plan?.endDate || companyData.planEndDate;
@@ -1473,10 +1465,9 @@
                     try {
                         const updates = { status: newStatus };
 
-                        // Si reactivamos una cuenta vencida, extendemos la fecha 48 horas
                         if (isExpired) {
                             const graceDate = new Date();
-                            graceDate.setDate(graceDate.getDate() + 2); // +2 Días
+                            graceDate.setDate(graceDate.getDate() + 2); 
                             
                             if (companyData.plan) {
                                 updates['plan.endDate'] = Timestamp.fromDate(graceDate);
@@ -1495,8 +1486,6 @@
                         currentStatus = newStatus;
                         updateButtonState(currentStatus);
                         suspendButton.disabled = false;
-                        
-                        // Opcional: Cerrar para refrescar la lista
                         window.history.back();
 
                     } catch (error) {
@@ -1508,7 +1497,6 @@
                     }
                 });
 
-                // --- LÓGICA BOTÓN ELIMINAR ---
                 if (deleteButton) {
                     deleteButton.addEventListener('click', async () => {
                         const confirmed = await showConfirmationModal(
@@ -1884,3 +1872,4 @@
     </script>
 </body>
 </html>
+
