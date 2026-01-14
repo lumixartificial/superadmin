@@ -431,8 +431,10 @@
         let functions; // Inicialización retrasada
 
         // --- (NUEVO) Configuración de Monedas para América ---
+        // --- (NUEVO) Configuración de Monedas para América ---
         const CURRENCY_CONFIGS = {
             "USD": { name: "Dólar Americano", symbol: "$", country: "EE.UU." },
+            "USD-EC": { name: "Dólar", symbol: "$", country: "Ecuador" }, 
             "CAD": { name: "Dólar Canadiense", symbol: "C$", country: "Canadá" },
             "MXN": { name: "Peso Mexicano", symbol: "MXN$", country: "México" },
             "GTQ": { name: "Quetzal Guatemalteco", symbol: "Q", country: "Guatemala" },
@@ -450,7 +452,6 @@
             "ARS": { name: "Peso Argentino", symbol: "ARS$", country: "Argentina" },
             "UYU": { name: "Peso Uruguayo", symbol: "$U", country: "Uruguay" },
             "BRL": { name: "Real Brasileiro", symbol: "R$", country: "Brasil" }
-            // Puedes añadir más si es necesario
         };
 
         // --- Variables Globales ---
@@ -1376,16 +1377,35 @@
                             body: JSON.stringify({ data: dataToSend })
                         });
                         const resultWrapper = await response.json();
-                        if (resultWrapper.result.success) {
+                        console.log("Respuesta del Servidor (Creación):", resultWrapper);
+
+                        // CORRECCIÓN DE SEGURIDAD
+                        const resultData = resultWrapper.result || resultWrapper;
+
+                        if (resultData && resultData.success) {
                             showToast(`Empresa criada com sucesso!`);
                             window.history.back();
                         } else {
-                            throw new Error(resultWrapper.error || 'Erro desconhecido.');
+                            const errorMsg = resultWrapper.error?.message || resultWrapper.error || resultData.error || 'Erro desconhecido no servidor.';
+                            throw new Error(errorMsg);
                         }
-                    }
-                } catch (generalError) {
+                        
+                    } // Cierra el ELSE (Modo Creación)
+
+                } catch (generalError) { // Cierra el TRY y abre el CATCH
                     console.error("Error general:", generalError);
-                    showToast(`Error: ${generalError.message}`, true);
+                    
+                    let msg = generalError.message;
+                    
+                    // --- TRADUCCIÓN DE ERRORES ---
+                    // Detectamos si el error es por email duplicado
+                    if (msg && (msg.includes("email-already-in-use") || msg.includes("already in use") || msg.includes("email-already-exists"))) {
+                        msg = "Este email já está registrado no sistema. Use outro email ou exclua o usuário no painel do Firebase Auth.";
+                    }
+
+                    showToast(`Erro: ${msg}`, true);
+                    
+                    // Restaurar botón
                     saveButton.disabled = false;
                     saveButton.innerHTML = originalButtonHTML;
                     if (document.body.contains(saveButton)) {
@@ -1542,13 +1562,13 @@
             const oldAddBtn = document.getElementById('mainFabBtn');
             const newAddBtn = oldAddBtn.cloneNode(true);
             oldAddBtn.parentNode.replaceChild(newAddBtn, oldAddBtn);
-            newAddBtn.addEventListener('click', () => {
+                 newAddBtn.addEventListener('click', () => {
+                 // Si estamos en la vista de Blacklist
                  if (document.getElementById('blacklist-view').style.display !== 'none') {
-                     showBlacklistModal(); // Función ficticia, en realidad abre modal directo
-                     // Como no tenemos un modal específico, usaremos uno simple o alert
-                     // En este código, usaremos el 'showCompanyFormModal' o lógica inline
-                     // Para simplificar, asumiremos que el FAB en Blacklist solo enfoca el input
+                     // CORRECCIÓN: Como el formulario ya es visible, solo enfocamos el campo
                      document.getElementById('bl-cpf').focus();
+                     // Opcional: Hacemos scroll hacia arriba por si acaso
+                     document.querySelector('main').scrollTo({ top: 0, behavior: 'smooth' });
                  } else {
                     showCompanyFormModal(); // Abre crear empresa
                  }
@@ -1864,8 +1884,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
