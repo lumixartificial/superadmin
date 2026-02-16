@@ -910,12 +910,16 @@
                 { value: '1y', text: 'Anual' }
             ];
 
-            const collectorLimitOptions = [
-                { value: '1', text: '1 Cobrador' },
-                { value: '3', text: '3 Cobradores' },
-                { value: '5', text: '5 Cobradores' },
-                { value: 'custom', text: 'Personalizado' },
-            ];
+            // Generar opciones del 1 al 10 consecutivas
+            const collectorLimitOptions = [];
+            for (let i = 1; i <= 10; i++) {
+                collectorLimitOptions.push({ 
+                    value: String(i), 
+                    text: i === 1 ? '1 Cobrador' : `${i} Cobradores` 
+                });
+            }
+            // Agregar la opción personalizada al final
+            collectorLimitOptions.push({ value: 'custom', text: 'Personalizado' });
 
             // Generamos las opciones de moneda
             // Si estamos editando, tomamos la moneda guardada en settings.currency, o fallamos a BRL
@@ -1872,4 +1876,5 @@
     </script>
 </body>
 </html>
+
 
