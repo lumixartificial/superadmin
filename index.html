@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Super Admin Panel</title>
+
+    <!-- --- INICIO: FORZAR ACTUALIZACIÓN (NO CACHÉ) --- -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <!-- --- FIN: FORZAR ACTUALIZACIÓN --- -->
     <!-- --- INICIO: FAVICON AÑADIDO --- -->
     <link rel="icon" type="image/png" href="https://firebasestorage.googleapis.com/v0/b/lumix-financas-app.firebasestorage.app/o/LOGO---LUMIX-FINANZAS-REDUCIDO.png?alt=media&token=0b4c34d2-f2e3-44b3-a380-7aadfb9c0991">
     <!-- --- FIN: FAVICON AÑADIDO --- -->
@@ -910,9 +916,9 @@
                 { value: '1y', text: 'Anual' }
             ];
 
-            // Generar opciones del 1 al 10 consecutivas
+           // Generar opciones del 1 al 50 consecutivas
             const collectorLimitOptions = [];
-            for (let i = 1; i <= 100; i++) {
+            for (let i = 1; i <= 50; i++) {
                 collectorLimitOptions.push({ 
                     value: String(i), 
                     text: i === 1 ? '1 Cobrador' : `${i} Cobradores` 
@@ -1115,15 +1121,18 @@
                     proFields.style.display = 'none';
                     modal.querySelector('#demo-duration').value = plan.duration || '7d';
                     
-                    const demoLimitSelect = modal.querySelector('#demo-collector-limit');
-                    const demoLimitType = plan.collectorLimitType || plan.collectorLimit?.toString();
+                   const demoLimitSelect = modal.querySelector('#demo-collector-limit');
+                    const savedLimit = plan.collectorLimit;
                     
-                    if (demoLimitSelect.querySelector(`option[value="${demoLimitType}"]`)) {
-                        demoLimitSelect.value = demoLimitType;
-                    } else if (demoLimitType) {
-                        demoLimitSelect.value = 'custom';
-                        modal.querySelector('#demo-custom-limit-group').style.display = 'block';
-                        modal.querySelector('#demo-custom-collector-limit').value = plan.collectorLimit || 0;
+                    if (savedLimit !== undefined && savedLimit !== null) {
+                        if (savedLimit > 0 && savedLimit <= 50) {
+                            demoLimitSelect.value = savedLimit.toString();
+                        } else {
+                            // Si es mayor a 50, o algo no estándar, usamos custom
+                            demoLimitSelect.value = 'custom';
+                            modal.querySelector('#demo-custom-limit-group').style.display = 'block';
+                            modal.querySelector('#demo-custom-collector-limit').value = savedLimit;
+                        }
                     }
 
                 } else if (plan.type === 'pro') {
